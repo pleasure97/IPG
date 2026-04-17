@@ -40,6 +40,7 @@ public class IPG : ModuleRules
 			"IPG/Variant_SideScrolling/UI"
 		});
 
+		SetupIrisSupport(Target);
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 

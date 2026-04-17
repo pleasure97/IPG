@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.7",
+	"EngineAssociation": "{0771D788-4CD1-5E1B-FCE8-2D9E140EA910}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -29,6 +29,10 @@
 		},
 		{
 			"Name": "GameplayStateTree",
+			"Enabled": true
+		},
+		{
+			"Name": "Iris",
 			"Enabled": true
 		}
 	]
