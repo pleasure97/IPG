@@ -18,7 +18,8 @@ public class IPG : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
+			"Slate", 
+			"NNE"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

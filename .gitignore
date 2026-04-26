@@ -3,6 +3,7 @@ DerivedDataCache
 Intermediate
 Saved
 Build
+/NNE/
 Plugins/Developer/RiderLink/
 
 .idea/
@@ -21,3 +22,5 @@ Plugins/Developer/RiderLink/
 *.xcworkspace
 *.pyc
 *.env
+*.onnx
+*.onnx.data
