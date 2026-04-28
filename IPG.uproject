@@ -11,7 +11,8 @@
 			"AdditionalDependencies": [
 				"Engine",
 				"AIModule",
-				"UMG"
+				"UMG",
+				"GameFeatures"
 			]
 		}
 	],
@@ -33,6 +34,10 @@
 		},
 		{
 			"Name": "Iris",
+			"Enabled": true
+		},
+		{
+			"Name": "GameFeatures",
 			"Enabled": true
 		}
 	]
