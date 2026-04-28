@@ -6,18 +6,27 @@
 #include "GameFramework/GameModeBase.h"
 #include "IPGGameMode.generated.h"
 
+class UIPGExperienceDefinition; 
+class UIPGCharacterData;
+
 /**
- *  Simple GameMode for a third person game
+ * 
  */
-UCLASS(abstract)
+UCLASS(MinimalAPI, Config = Game, Meta = (ShortTooltip = "The base game mode class used by this project."))
 class AIPGGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
-	
-	/** Constructor */
 	AIPGGameMode();
+
+	/* AGameModeBase Interface */
+	virtual void InitGameState() override;
+
+	const UIPGCharacterData* GetCharacterDataForController(const AController* InController) const;
+
+private:
+	void OnExperienceLoaded(const UIPGExperienceDefinition* CurrentExperience);
 };
 
 
