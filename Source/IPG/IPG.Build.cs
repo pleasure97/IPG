@@ -26,20 +26,20 @@ public class IPG : ModuleRules
 
 		PublicIncludePaths.AddRange(new string[] {
 			"IPG",
-			"IPG/Variant_Platforming",
-			"IPG/Variant_Platforming/Animation",
-			"IPG/Variant_Combat",
-			"IPG/Variant_Combat/AI",
-			"IPG/Variant_Combat/Animation",
-			"IPG/Variant_Combat/Gameplay",
-			"IPG/Variant_Combat/Interfaces",
-			"IPG/Variant_Combat/UI",
-			"IPG/Variant_SideScrolling",
-			"IPG/Variant_SideScrolling/AI",
-			"IPG/Variant_SideScrolling/Gameplay",
-			"IPG/Variant_SideScrolling/Interfaces",
-			"IPG/Variant_SideScrolling/UI"
-		});
+			"IPG/Public/Variant_Platforming",
+            "IPG/Public/Variant_Platforming/Animation",
+            "IPG/Public/Variant_Combat",
+            "IPG/Public/Variant_Combat/AI",
+            "IPG/Public/Variant_Combat/Animation",
+            "IPG/Public/Variant_Combat/Gameplay",
+            "IPG/Public/Variant_Combat/Interfaces",
+            "IPG/Public/Variant_Combat/UI",
+            "IPG/Public/Variant_SideScrolling",
+            "IPG/Public/Variant_SideScrolling/AI",
+            "IPG/Public/Variant_SideScrolling/Gameplay",
+            "IPG/Public/Variant_SideScrolling/Interfaces",
+            "IPG/Public/Variant_SideScrolling/UI"
+        });
 
 		SetupIrisSupport(Target);
 		// Uncomment if you are using Slate UI
