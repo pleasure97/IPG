@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType, Const)
 class IPG_API UIPGCharacterData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()

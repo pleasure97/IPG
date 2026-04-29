@@ -1,29 +1,29 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Game/Experience/IPGExperienceDefinition.h"
+#include "Game/Experience/IPGExperienceActionSet.h"
 #include "GameFeatureAction.h"
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
 #endif
 
-UIPGExperienceDefinition::UIPGExperienceDefinition()
+UIPGExperienceActionSet::UIPGExperienceActionSet()
 {
 }
 
 #if WITH_EDITOR
-EDataValidationResult UIPGExperienceDefinition::IsDataValid(FDataValidationContext& Context) const
+EDataValidationResult UIPGExperienceActionSet::IsDataValid(FDataValidationContext& Context) const
 {
     EDataValidationResult DataValidationResult = CombineDataValidationResults(
-        Super::IsDataValid(Context), EDataValidationResult::Valid); 
+        Super::IsDataValid(Context), EDataValidationResult::Valid);
 
-    int32 EntryIndex = 0; 
+    int32 EntryIndex = 0;
 
     for (const UGameFeatureAction* Action : Actions)
     {
         if (Action)
         {
-            EDataValidationResult ChildDataValidationResult = Action->IsDataValid(Context); 
+            EDataValidationResult ChildDataValidationResult = Action->IsDataValid(Context);
             DataValidationResult = CombineDataValidationResults(DataValidationResult, ChildDataValidationResult);
         }
         else
@@ -39,16 +39,16 @@ EDataValidationResult UIPGExperienceDefinition::IsDataValid(FDataValidationConte
 #endif
 
 #if WITH_EDITORONLY_DATA
-void UIPGExperienceDefinition::UpdateAssetBundleData()
+void UIPGExperienceActionSet::UpdateAssetBundleData()
 {
-    Super::UpdateAssetBundleData(); 
+	Super::UpdateAssetBundleData();
 
-    for (UGameFeatureAction* Action : Actions)
-    {
-        if (Action)
-        {
-            Action->AddAdditionalAssetBundleData(AssetBundleData);
-        }
-    }
+	for (UGameFeatureAction* Action : Actions)
+	{
+		if (Action)
+		{
+			Action->AddAdditionalAssetBundleData(AssetBundleData);
+		}
+	}
 }
 #endif

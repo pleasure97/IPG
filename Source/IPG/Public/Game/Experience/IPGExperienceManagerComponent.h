@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "IPGExperienceManagerComponent.generated.h"
 
+namespace UE::GameFeatures { struct FResult; }
+
 class UIPGExperienceDefinition;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnIPGExperienceLoaded, const UIPGExperienceDefinition* /* Experience */)
@@ -28,17 +30,30 @@ class IPG_API UIPGExperienceManagerComponent : public UActorComponent
 public:	
 	UIPGExperienceManagerComponent();
 
-	// Ensures the delegate is called once the experience has been loaded
+	// Ensure the delegate is called once the experience has been loaded
 	// If the experience has already loaded, calls the delegate immediately
 	void CallOrRegisterExperienceLoadedCallback(FOnIPGExperienceLoaded::FDelegate&& Delegate);
 
+	// Try to set the current experience, either a UI or gameplay one
+	void SetCurrentExperience(FPrimaryAssetId ExperienceId);
+
 	bool IsExperienceLoaded() const;
+
+	// This returns the current experience if it is fully loaded, asserting otherwise
+	const UIPGExperienceDefinition* GetCurrentExperienceChecked() const;
 
 protected:
 	/* UObject Interface */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
+	/* Game Feature Plugins */
+	int32 NumGameFeaturePluginsLoading = 0;
+	TArray<FString> GameFeaturePluginURLs;
+
+	void OnGameFeaturePluginLoadComplete(const UE::GameFeatures::FResult& Result);
+
+	/* Experience Load */
 	EIPGExperienceLoadState LoadState = EIPGExperienceLoadState::Unloaded;
 
 	FOnIPGExperienceLoaded OnExperienceLoaded;
@@ -50,4 +65,8 @@ private:
 	void OnRep_CurrentExperience();
 
 	void StartExperienceLoad();
+
+	void OnExperienceLoadComplete();
+
+	void OnExperienceFullLoadCompleted();
 };
