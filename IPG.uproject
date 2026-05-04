@@ -39,6 +39,18 @@
 		{
 			"Name": "GameFeatures",
 			"Enabled": true
+		},
+		{
+			"Name": "CommonUI",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
+		{
+			"Name": "IPGTaskSystem",
+			"Enabled": true
 		}
 	]
 }

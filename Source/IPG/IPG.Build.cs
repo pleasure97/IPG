@@ -20,8 +20,13 @@ public class IPG : ModuleRules
 			"UMG",
 			"Slate", 
 			"NNE", 
-			"NetCore"
-		});
+			"NetCore",
+            "GameplayTags",
+            "GameplayTasks",
+            "GameplayAbilities",
+            "ModularGameplay",
+			"IPGTaskSystem"
+        });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
