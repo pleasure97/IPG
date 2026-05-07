@@ -51,6 +51,10 @@
 		{
 			"Name": "IPGTaskSystem",
 			"Enabled": true
+		},
+		{
+			"Name": "ModularGameplay", 
+			"Enabled": true
 		}
 	]
 }
