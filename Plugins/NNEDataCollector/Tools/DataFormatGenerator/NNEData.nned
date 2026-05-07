@@ -1,0 +1,20 @@
+# NNEData.nned
+
+record ProjectileData
+	float Distance2D
+	float HeightDiff
+	float Angle
+	label Angle > 30 
+	
+record CharacterState
+	float LocationX
+	float LocationY
+	float LocationZ
+	float Speed
+	float Health
+	
+record HitResult
+	float ImpactAngle
+	float Distance
+	FVector ImpactPoint
+	bool bHeadShot
