@@ -28,7 +28,11 @@ public class IPG : ModuleRules
 			"IPGTaskSystem"
         });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+		PrivateDependencyModuleNames.AddRange(new string[] {
+            "AutomationController", 
+			"Slate", 
+			"SlateCore",
+        });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"IPG",

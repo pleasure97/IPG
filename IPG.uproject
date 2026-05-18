@@ -12,7 +12,9 @@
 				"Engine",
 				"AIModule",
 				"UMG",
-				"GameFeatures"
+				"GameFeatures",
+				"CommonUI",
+				"DeveloperSettings"
 			]
 		}
 	],
@@ -53,7 +55,7 @@
 			"Enabled": true
 		},
 		{
-			"Name": "ModularGameplay", 
+			"Name": "ModularGameplay",
 			"Enabled": true
 		}
 	]
