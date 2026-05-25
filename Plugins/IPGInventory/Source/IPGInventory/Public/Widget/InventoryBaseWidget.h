@@ -17,7 +17,9 @@ UCLASS()
 class IPGINVENTORY_API UInventoryBaseWidget : public UCommonUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
 	virtual FSlotAvailabilityResult HasRoomForItem(UItemComponent* ItemComponent) const { return FSlotAvailabilityResult(); }
+	virtual void OnItemHovered(UInventoryItem* Item) {}
+	virtual void OnItemUnhovered() {}
 };

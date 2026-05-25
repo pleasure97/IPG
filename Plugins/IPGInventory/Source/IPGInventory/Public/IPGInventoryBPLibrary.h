@@ -7,6 +7,7 @@
 
 class APlayerController;
 class UInventoryComponent; 
+class UInventoryItem;
 
 UCLASS()
 class UIPGInventoryBPLibrary : public UBlueprintFunctionLibrary
@@ -16,4 +17,10 @@ class UIPGInventoryBPLibrary : public UBlueprintFunctionLibrary
 public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	static UInventoryComponent* GetInventoryComponent(const APlayerController* PlayerController);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	static void ItemHovered(APlayerController* PC, UInventoryItem* Item); 
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	static void ItemUnhovered(APlayerController* PC);
 };

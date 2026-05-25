@@ -160,7 +160,7 @@ void UItemTraceComponent::CreateHUDWidget()
 		return;
 	}
 
-	HUDWidget = CreateWidget<UInventoryHUDWidget>(this, HUDWidgetClass);
+	HUDWidget = CreateWidget<UInventoryHUDWidget>(OwnerPlayerController.Get(), HUDWidgetClass);
 	if (IsValid(HUDWidget))
 	{
 		HUDWidget->AddToViewport();
