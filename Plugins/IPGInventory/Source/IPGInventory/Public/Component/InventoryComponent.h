@@ -29,6 +29,8 @@ public:
 
 	bool IsMenuOpen() const { return bInventoryMenuOpen; }
 
+	UInventoryBaseWidget* GetInventoryMenu() const;
+
 	UFUNCTION(BlueprintCallable)
 	void TryAddItem(UItemComponent* ItemComponent); 
 
@@ -62,6 +64,8 @@ public:
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void BeginPlay() override;
+
+	bool IsSupportedForNetworking() const override { return true; }
 
 private:
 	void ConstructInventory();

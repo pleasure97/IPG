@@ -4,6 +4,7 @@
 #include "InventoryItem.h"
 #include "Net/UnrealNetwork.h"
 #include "Fragment/ItemFragment.h"
+#include "SlotItemWidget.h"
 
 void UInventoryItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -13,8 +14,8 @@ void UInventoryItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	FDoRepLifetimeParams Params;
 	Params.bIsPushBased = true;
 
-	DOREPLIFETIME(UInventoryItem, ItemManifest);
-	DOREPLIFETIME(UInventoryItem, TotalStackCount);
+	DOREPLIFETIME_WITH_PARAMS_FAST(UInventoryItem, ItemManifest, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(UInventoryItem, TotalStackCount, Params);
 }
 
 void UInventoryItem::SetItemManifest(const FItemManifest& Manifest)

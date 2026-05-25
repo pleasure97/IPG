@@ -28,6 +28,7 @@ public:
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	bool IsSupportedForNetworking() const override { return true; }
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Inventory")
 	void OnPickedUp(); 

@@ -21,6 +21,7 @@ public:
 	/* AActor Interface */
 	virtual void PostInitializeComponents() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	bool IsSupportedForNetworking() const override { return true; }
 
 	/* Character Data */
 	const UIPGCharacterData* GetCharacterData() const { return CharacterData; }

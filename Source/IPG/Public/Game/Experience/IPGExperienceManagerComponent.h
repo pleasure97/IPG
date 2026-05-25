@@ -45,6 +45,7 @@ public:
 protected:
 	/* UObject Interface */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	bool IsSupportedForNetworking() const override { return true; }
 
 private:
 	/* Game Feature Plugins */

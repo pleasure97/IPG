@@ -24,7 +24,7 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	FDoRepLifetimeParams Params;
 	Params.bIsPushBased = true;
 
-	DOREPLIFETIME(UInventoryComponent, InventoryList);
+	DOREPLIFETIME_WITH_PARAMS_FAST(UInventoryComponent, InventoryList, Params);
 }
 
 void UInventoryComponent::BeginPlay()
@@ -73,6 +73,11 @@ void UInventoryComponent::ToggleInventoryMenu(bool bOpen)
 		OwningPlayerController->SetInputMode(InputMode);
 	}
 	OwningPlayerController->SetShowMouseCursor(bOpen);
+}
+
+UInventoryBaseWidget* UInventoryComponent::GetInventoryMenu() const
+{
+	return InventoryMenu;
 }
 
 void UInventoryComponent::TryAddItem(UItemComponent* ItemComponent)

@@ -18,7 +18,7 @@ void UItemComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	FDoRepLifetimeParams Params;
 	Params.bIsPushBased = true;
 
-	DOREPLIFETIME(UItemComponent, ItemManifest);
+	DOREPLIFETIME_WITH_PARAMS_FAST(UItemComponent, ItemManifest, Params);
 }
 
 void UItemComponent::InitItemManifest(FItemManifest CopiedManifest)
