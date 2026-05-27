@@ -5,6 +5,7 @@
 #include "Fragment/ItemFragment.h"
 #include "InventoryItem.h"
 #include "Component/ItemComponent.h"
+#include "Widget/Composite/CompositeBaseWidget.h"
 
 UInventoryItem* FItemManifest::Manifest(UObject* NewOuter)
 {
@@ -19,6 +20,23 @@ UInventoryItem* FItemManifest::Manifest(UObject* NewOuter)
 	ClearFragments();
 
 	return InventoryItem;
+}
+
+void FItemManifest::AssimilateInventoryFragments(UCompositeBaseWidget* Composite) const
+{
+	if (!IsValid(Composite))
+	{
+		return;
+	}
+
+	const auto& InventoryItemFragments = GetAllFragmentsOfType<FInventoryItemFragment>(); 
+	for (const auto* InventoryItemFragment : InventoryItemFragments)
+	{
+		Composite->ApplyFunction([InventoryItemFragment](UCompositeBaseWidget* Widget)
+			{
+				InventoryItemFragment->Assimilate(Widget);
+			});
+	}
 }
 
 void FItemManifest::SpawnPickupActor(const UObject* WorldContextObject, const FVector& SpawnLocation, const FRotator& SpawnRotation)

@@ -43,7 +43,7 @@ public:
 	/* "IMAGE BRUSH" Setter */
 	void SetImageBrush(const FSlateBrush& Brush) const; 
 
-	void UpdateStackCoiunt(int32 StackCount); 
+	void UpdateStackCount(int32 StackCount); 
 
 	FSlotItemClicked OnSlotItemClicked;
 

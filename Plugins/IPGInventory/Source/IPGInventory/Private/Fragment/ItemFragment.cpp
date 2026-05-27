@@ -2,7 +2,51 @@
 
 
 #include "Fragment/ItemFragment.h"
+#include "Widget/Composite/CompositeBaseWidget.h"
+#include "Widget/Composite/LeafImageWidget.h"
+#include "Widget/Composite/LeafTextWidget.h"
+#include "Widget/Composite/LeafValueWidget.h"
+#include "Equipment/EquipmentActor.h"
 
+/*----------------------------------------------------- Inventory Item ----------------------------------------------------- */
+// Assimilate leaf widgets
+void FInventoryItemFragment::Assimilate(UCompositeBaseWidget* Composite) const
+{
+	if (!MatchesWidgetTag(Composite))
+	{
+		return;
+	}
+	Composite->Expand();
+}
+
+bool FInventoryItemFragment::MatchesWidgetTag(const UCompositeBaseWidget* Composite) const
+{
+	return Composite->GetFragmentTag().MatchesTagExact(GetFragmentTag());
+}
+
+/*----------------------------------------------------- Grid ----------------------------------------------------- */
+/* Grid Size */
+FIntPoint FGridFragment::GetGridSize() const
+{
+	return GridSize;
+}
+void FGridFragment::SetGridSize(const FIntPoint& Size)
+{
+	GridSize = Size;
+}
+
+/* Grid Padding */
+float FGridFragment::GetGridPadding() const
+{
+	return GridPadding;
+}
+
+void FGridFragment::SetGridPadding(float Padding)
+{
+	GridPadding = Padding;
+}
+
+/*----------------------------------------------------- Consumable ----------------------------------------------------- */
 void FConsumableFragment::OnConsume(APlayerController* PC)
 {
 	for (TInstancedStruct<FConsumeModifier>& ConsumeModifier : ConsumeModifiers)
@@ -20,4 +64,138 @@ void FConsumableFragment::Manifest()
 		FConsumeModifier& ConsumeModifierRef = ConsumeModifier.GetMutable();
 		ConsumeModifierRef.Manifest();
 	}
+}
+
+/*----------------------------------------------------- Image ----------------------------------------------------- */
+UTexture2D* FImageFragment::GetIcon() const
+{
+	return Icon;
+}
+
+void FImageFragment::Assimilate(UCompositeBaseWidget* Composite) const
+{
+	FInventoryItemFragment::Assimilate(Composite); 
+
+	if (!MatchesWidgetTag(Composite))
+	{
+		return;
+	}
+
+	ULeafImageWidget* LeafImageWidget = Cast<ULeafImageWidget>(Composite); 
+	if (!IsValid(LeafImageWidget))
+	{
+		return;
+	}
+
+	LeafImageWidget->SetImage(Icon); 
+	LeafImageWidget->SetBoxSize(IconDimensions);
+	LeafImageWidget->SetImageSize(IconDimensions);
+}
+
+/*----------------------------------------------------- Text ----------------------------------------------------- */
+FText FTextFragment::GetText() const
+{
+	return FragmentText;
+}
+
+void FTextFragment::SetText(const FText& Text)
+{
+	FragmentText = Text;
+}
+
+void FTextFragment::Assimilate(UCompositeBaseWidget* Composite) const
+{
+	FInventoryItemFragment::Assimilate(Composite);
+
+	if (!MatchesWidgetTag(Composite))
+	{
+		return;
+	}
+
+	ULeafTextWidget* LeafTextWidget = Cast<ULeafTextWidget>(Composite); 
+	if (!IsValid(LeafTextWidget))
+	{
+		return;
+	}
+
+	LeafTextWidget->SetText(FragmentText);
+}
+
+/*----------------------------------------------------- Value ----------------------------------------------------- */
+void FValueFragment::Assimilate(UCompositeBaseWidget* Composite) const
+{
+	FInventoryItemFragment::Assimilate(Composite); 
+
+	if (!MatchesWidgetTag(Composite))
+	{
+		return;
+	}
+
+	ULeafValueWidget* LeafValueWidget = Cast<ULeafValueWidget>(Composite); 
+	if (!IsValid(LeafValueWidget))
+	{
+		return;
+	}
+
+	LeafValueWidget->SetLabelText(LabelText, bCollapseLabel); 
+
+	FNumberFormattingOptions NumberFormattingOptions;
+	NumberFormattingOptions.MinimumFractionalDigits = MinFractionalDigits;
+	NumberFormattingOptions.MaximumFractionalDigits = MaxFractionalDigits;
+
+	LeafValueWidget->SetValueText(FText::AsNumber(Value, &NumberFormattingOptions), bCollapseValue);
+}
+
+void FValueFragment::Manifest()
+{
+	FInventoryItemFragment::Manifest(); 
+
+	if (bRandomizeOnManifest)
+	{
+		Value = FMath::RandRange(Min, Max); 
+	}
+	bRandomizeOnManifest = false;
+}
+
+float FValueFragment::GetValue() const
+{
+	return Value;
+}
+
+void FValueFragment::SetRandomizeOnManifest(bool bInRandomizeOnManifest)
+{
+	bRandomizeOnManifest = bInRandomizeOnManifest;
+}
+
+/*----------------------------------------------------- Equipment ----------------------------------------------------- */
+FGameplayTag FEquipmentFragment::GetEquipmentType() const
+{
+	return EquipmentTypeTag;
+}
+
+void FEquipmentFragment::SetEquipActor(AEquipmentActor* InEquipActor)
+{
+	EquipActor = InEquipActor;
+}
+
+AEquipmentActor* FEquipmentFragment::SpawnEquipActor(USkeletalMeshComponent* EquipMesh) const
+{
+	if (!IsValid(EquipActorClass) || !IsValid(EquipMesh))
+	{
+		return nullptr;
+	}
+
+	return nullptr;
+}
+
+void FEquipmentFragment::DestroyEquipActor() const
+{
+}
+
+void FEquipmentFragment::Assimilate(UCompositeBaseWidget* Composite) const
+{
+}
+
+void FEquipmentFragment::Manifest()
+{
 }

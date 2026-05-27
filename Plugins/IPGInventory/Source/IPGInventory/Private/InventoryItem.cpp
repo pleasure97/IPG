@@ -4,7 +4,6 @@
 #include "InventoryItem.h"
 #include "Net/UnrealNetwork.h"
 #include "Fragment/ItemFragment.h"
-#include "SlotItemWidget.h"
 
 void UInventoryItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

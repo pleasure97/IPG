@@ -78,7 +78,7 @@ inline bool operator==(const FTileParameters& A, const FTileParameters& B)
 }
 
 USTRUCT()
-struct FInv_SpaceQueryResult
+struct FSpaceQueryResult
 {
 	GENERATED_BODY()
 

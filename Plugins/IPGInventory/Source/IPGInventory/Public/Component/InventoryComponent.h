@@ -44,7 +44,7 @@ public:
 	void Server_DropItem(UInventoryItem* Item, int32 StackCount); 
 
 	UFUNCTION(Server, Reliable)
-	void Server_ConsumeItem(UInventoryItem* Item, int32 StackCount);
+	void Server_ConsumeItem(UInventoryItem* Item, int32 StackCount = 1);
 
 	UFUNCTION(Server, Reliable)
 	void Server_EquipSlotClicked(UInventoryItem* ItemToEquip, UInventoryItem* ItemToUnequip); 

@@ -39,3 +39,15 @@ private:
 	UPROPERTY(Replicated)
 	int32 TotalStackCount = 0;
 };
+
+template<typename FragmentType>
+const FragmentType* GetFragment(const UInventoryItem* Item, const FGameplayTag& Tag)
+{
+	if (!IsValid(Item))
+	{
+		return nullptr;
+	}
+
+	const FItemManifest& Manifest = Item->GetItemManifest(); 
+	return Manifest.GetFragmentOfTypeWithTag<FragmentType>(Tag);
+}

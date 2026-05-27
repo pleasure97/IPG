@@ -9,6 +9,7 @@
 #include "ItemManifest.generated.h"
 
 class UInventoryItem;
+class UCompositeBaseWidget;
 struct FItemFragment;
 
 /**
@@ -20,6 +21,7 @@ struct IPGINVENTORY_API FItemManifest
 	GENERATED_BODY()
 
 public:
+	/* Fragment Getters */
 	TArray<TInstancedStruct<FItemFragment>>& GetFragmentsMutable() { return Fragments; }
 	EItemCategory GetItemCategory() const { return ItemCategory; }
 	FGameplayTag GetItemType() const { return ItemType; }
@@ -36,7 +38,10 @@ public:
 	template<typename T> requires std::derived_from<T, FItemFragment>
 	TArray<const T*> GetAllFragmentsOfType() const; 
 
+	/* Manifest */
 	UInventoryItem* Manifest(UObject* NewOuter);
+
+	void AssimilateInventoryFragments(UCompositeBaseWidget* Composite) const; 
 
 	void SpawnPickupActor(const UObject* WorldContextObject, const FVector& SpawnLocation, const FRotator& SpawnRotation);
 

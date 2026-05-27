@@ -5,6 +5,7 @@
 #include "CommonLazyImage.h"
 #include "CommonTextBlock.h"
 #include "IPGInventoryBPLibrary.h"
+#include "InventoryItem.h"
 
 /* "STACKABLE" Getter & Setter */
 bool USlotItemWidget::IsStackable() const
@@ -62,7 +63,7 @@ void USlotItemWidget::SetImageBrush(const FSlateBrush& Brush) const
 	Image_Icon->SetBrush(Brush);
 }
 
-void USlotItemWidget::UpdateStackCoiunt(int32 StackCount)
+void USlotItemWidget::UpdateStackCount(int32 StackCount)
 {
 	if (StackCount > 0)
 	{

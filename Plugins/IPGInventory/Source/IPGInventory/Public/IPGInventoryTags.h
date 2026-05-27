@@ -2,14 +2,13 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "NativeGameplayTags.h"
 
-/**
- * 
- */
-class IPGINVENTORY_API IPGInventoryTags
+namespace FragmentTags
 {
-public:
-	IPGInventoryTags();
-	~IPGInventoryTags();
-};
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GridFragment)
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(IconFragment)
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(StackableFragment)
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(ConsumableFragment)
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(EquipmentFragment)
+}

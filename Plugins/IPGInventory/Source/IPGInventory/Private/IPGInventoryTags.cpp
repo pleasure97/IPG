@@ -3,11 +3,11 @@
 
 #include "IPGInventoryTags.h"
 
-
-IPGInventoryTags::IPGInventoryTags()
+namespace FragmentTags
 {
-}
-
-IPGInventoryTags::~IPGInventoryTags()
-{
+	UE_DEFINE_GAMEPLAY_TAG(GridFragment, "Inventory.Fragment.GridFragment")
+	UE_DEFINE_GAMEPLAY_TAG(IconFragment, "Inventory.Fragment.IconFragment")
+	UE_DEFINE_GAMEPLAY_TAG(StackableFragment, "Inventory.Fragment.StackableFragment")
+	UE_DEFINE_GAMEPLAY_TAG(ConsumableFragment, "Inventory.Fragment.ConsumableFragment")
+	UE_DEFINE_GAMEPLAY_TAG(EquipmentFragment, "Inventory.Fragment.EquipmentFragment")
 }

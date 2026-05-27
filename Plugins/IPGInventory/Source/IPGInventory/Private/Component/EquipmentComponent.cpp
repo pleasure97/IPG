@@ -7,6 +7,16 @@
 #include "IPGInventoryBPLibrary.h"
 #include "Component/InventoryComponent.h"
 
+void UEquipmentComponent::SetOwningSkeletalMesh(USkeletalMeshComponent* InOwningSkeletalMesh)
+{
+	OwningSkeletalMesh = InOwningSkeletalMesh;
+}
+
+void UEquipmentComponent::SetIsProxy(bool bIsProxy)
+{
+	bProxy = bIsProxy;
+}
+
 void UEquipmentComponent::BeginPlay()
 {
 	Super::BeginPlay();

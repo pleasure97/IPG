@@ -15,6 +15,10 @@ class IPGINVENTORY_API UEquipmentComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
+public:
+	void SetOwningSkeletalMesh(USkeletalMeshComponent* InOwningSkeletalMesh); 
+	void SetIsProxy(bool bIsProxy); 
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -29,4 +33,6 @@ private:
 	TWeakObjectPtr<UInventoryComponent> InventoryComponent;
 	TWeakObjectPtr<APlayerController> OwningPlayerController;
 	TWeakObjectPtr<USkeletalMeshComponent> OwningSkeletalMesh;
+
+	bool bProxy = false;
 };
