@@ -21,3 +21,27 @@ UIPGAssetManager& UIPGAssetManager::Get()
 	// Fatal error above prevents this from being called.
 	return *NewObject<UIPGAssetManager>();
 }
+
+UObject* UIPGAssetManager::SynchronousLoadAsset(const FSoftObjectPath& AssetPath)
+{
+	if (AssetPath.IsValid())
+	{
+		if (UAssetManager::IsInitialized())
+		{
+			return UAssetManager::GetStreamableManager().LoadSynchronous(AssetPath, false);
+		}
+
+		// Use LoadObject if asset manager isn't ready yet
+		return AssetPath.TryLoad();
+	}
+	return nullptr;
+}
+
+void UIPGAssetManager::AddLoadedAsset(const UObject* Asset)
+{
+	if (ensureAlways(Asset))
+	{
+		FScopeLock LoadedAssetLock(&LoadedAssetsCriticalSection); 
+		LoadedAssets.Add(Asset);
+	}
+}

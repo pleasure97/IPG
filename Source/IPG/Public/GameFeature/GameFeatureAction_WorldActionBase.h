@@ -12,7 +12,7 @@ class UGameInstance;
 /**
  * Base Class for GameFeatureActions that wish to do something world specific
  */
-UCLASS()
+UCLASS(meta = (DisplayName = "World Action Base"))
 class IPG_API UGameFeatureAction_WorldActionBase : public UGameFeatureAction
 {
 	GENERATED_BODY()

@@ -11,7 +11,7 @@ class UGameFeatureAction;
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType)
 class IPG_API UIPGExperienceActionSet : public UPrimaryDataAsset
 {
 	GENERATED_BODY()

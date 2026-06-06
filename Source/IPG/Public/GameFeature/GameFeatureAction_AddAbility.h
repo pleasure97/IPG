@@ -61,7 +61,7 @@ struct FGameFeatureAbilitiesEntry
 /**
  * 
  */
-UCLASS()
+UCLASS(meta = (DisplayName = "Add Ability"))
 class IPG_API UGameFeatureAction_AddAbility : public UGameFeatureAction_WorldActionBase
 {
 	GENERATED_BODY()
