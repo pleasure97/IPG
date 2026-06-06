@@ -9,6 +9,12 @@
 
 class FIPGExclusiveTask;
 
+enum class EIPGThreadMode : uint8
+{
+	WorkerThread,
+	GameThread
+};
+
 /**
  * Exclusive Resource
  * - Each resource atomically manages the TailTask last registered to it
@@ -28,11 +34,11 @@ public:
 	 * - Replace this resource's tail task with NewTask atomically, 
 	 * - return preceding tail task
 	 */
-	TSharedPtr<FIPGExclusiveTask> ExchangeTailTask(TSharedPtr<FIPGExclusiveTask> NewTask);
+	UE::Tasks::FTask ExchangeTailTask(UE::Tasks::FTask NewTask);
 
 private:
-	TSharedPtr<FIPGExclusiveTask> TailTaskPtr;
-	UE::FSpinLock TailTaskSpinLock;
+	UE::Tasks::FTask TailTask;
+	FCriticalSection TailTaskCriticalSection;
 };
 
 /**
@@ -41,25 +47,33 @@ private:
  * - "BuildTaskGraph()" sorts the resource list to prevent cycles, waits until previous TailTask for each resource is completed, 
  * - and then starts its own task.
  */
-class IPGTASKSYSTEM_API FIPGExclusiveTask : public TSharedFromThis<FIPGExclusiveTask>
+
+ /*
+* Build Task Graph
+*
+* 1) Sort resource list to prevent cycle
+* 2) Get preceding task from each resource using "ExchangeTailTask()"
+* 3) Wait to spin until the preceding task's "bBuildComplete" flag becomes true
+* 4) Start own task once all preceding tasks are completed
+* 5) Atomically set "bBuildComplete to true
+*/
+
+namespace IPGTaskSystem
 {
-public:
-	// Create Exclusive Task Instance Receving Lambda Function
-	static TSharedPtr<FIPGExclusiveTask> Create(TFunction<void()> InBody);
-
-	/*
-	 * Build Task Graph 
-	 * 
-	 * 1) Sort resource list to prevent cycle
-	 * 2) Get preceding task from each resource using "ExchangeTailTask()"
-	 * 3) Wait to spin until the preceding task's "bBuildComplete" flag becomes true
-	 * 4) Start own task once all preceding tasks are completed
-	 * 5) Atomically set "bBuildComplete to true
+	/**
+	 * Launch task that guarantees exclusive access to multiple shared resources
+	 * @param DebugName       Name for debugging and profiling
+	 * @param Resources       List of required resources determined at runtime
+	 * @param Body            Lambda function to execute
+	 * @param ThreadMode      Whether to delegate to game thread
+	 * @param Prerequisites   Additional prerequisite tasks to wait for (Optional)
+	 * @return                FTask indicating the completion of this task 
 	 */
-	FIPGExclusiveTask& BuildTaskGraph(TArray<FIPGExclusiveResource*> Resources);
-
-	UE::Tasks::FTask InnerTask;
-private:
-	TFunction<void()> Body;
-	volatile int32 bBuildComplete = 0; 
-};
+	IPGTASKSYSTEM_API UE::Tasks::FTask LaunchExclusive(
+		const TCHAR* DebugName,
+		TArray<FIPGExclusiveResource*> Resources,
+		TFunction<void()> Body,
+		EIPGThreadMode ThreadMode = EIPGThreadMode::WorkerThread,
+		UE::Tasks::FTask Prerequisites = {}
+	);
+}

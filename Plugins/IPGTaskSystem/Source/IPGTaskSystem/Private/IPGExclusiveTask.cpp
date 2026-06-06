@@ -2,80 +2,90 @@
 
 
 #include "IPGExclusiveTask.h"
+#include "Misc/ScopeLock.h"
 
-TSharedPtr<FIPGExclusiveTask> FIPGExclusiveResource::ExchangeTailTask(TSharedPtr<FIPGExclusiveTask> NewTask)
+UE::Tasks::FTask FIPGExclusiveResource::ExchangeTailTask(UE::Tasks::FTask NewTask)
 {
-	TSharedPtr<FIPGExclusiveTask> PrevExclusiveTask;
+	FScopeLock Lock(&TailTaskCriticalSection);
 
-	/* Spin Lock */
-	TailTaskSpinLock.Lock();
-	PrevExclusiveTask = TailTaskPtr;
-	TailTaskPtr = NewTask;
-	TailTaskSpinLock.Unlock();
-	/* Spin Lock End */
+	UE::Tasks::FTask PrevTask = TailTask;
+	TailTask = NewTask;
 
-	return PrevExclusiveTask;
+	return PrevTask;
 }
 
-TSharedPtr<FIPGExclusiveTask> FIPGExclusiveTask::Create(TFunction<void()> InBody)
+namespace IPGTaskSystem
 {
-	TSharedPtr<FIPGExclusiveTask> NewTask = MakeShared<FIPGExclusiveTask>();
-	NewTask->Body = MoveTemp(InBody);
-	return NewTask;
-}
-
-FIPGExclusiveTask& FIPGExclusiveTask::BuildTaskGraph(TArray<FIPGExclusiveResource*> Resources)
-{
-	TArray<TSharedPtr<FIPGExclusiveTask>> PrecedingTasks;
-
-	// 1) Sort resource list to prevent cycle
-	Resources.Sort([](const FIPGExclusiveResource& A, const FIPGExclusiveResource& B)
+	UE::Tasks::FTask LaunchExclusive(
+		const TCHAR* DebugName,
+		TArray<FIPGExclusiveResource*> Resources,
+		TFunction<void()> Body,
+		EIPGThreadMode ThreadMode,
+		UE::Tasks::FTask Prerequisites)
+	{
+		// 1) Sort resource list to prevent deadlock
+		Resources.Sort([](const FIPGExclusiveResource& A, const FIPGExclusiveResource& B)
 		{
-			// Prevent deadlock by comparing address values
-			return &A < &B;
+				return &A < &B;
 		});
 
-	for (FIPGExclusiveResource* Resource : Resources)
-	{
-		// Get preceding tasks required for building task graph 
-		TSharedPtr<FIPGExclusiveTask> PrecedingTask = Resource->ExchangeTailTask(AsShared());
-
-		PrecedingTasks.Add(PrecedingTask);
-
-		// Wait to spin until preceding task completes BuildTaskGraph
-		if (PrecedingTask.IsValid())
+		TArray<UE::Tasks::FTask> AllPrerequisites;
+		if (Prerequisites.IsValid())
 		{
-			while (!FPlatformAtomics::AtomicRead(&PrecedingTask->bBuildComplete))
+			AllPrerequisites.Add(Prerequisites); 
+		}
+
+		// 2) Create completion event 
+		UE::Tasks::FTaskEvent CompletionEvent(DebugName); 
+
+		// 3) Call exchange() made safe with FScopeLock
+		for (FIPGExclusiveResource* Resource : Resources)
+		{
+			if (Resource)
 			{
-				FPlatformProcess::YieldThread();
+				UE::Tasks::FTask PrevTask = Resource->ExchangeTailTask(CompletionEvent); 
+				if (PrevTask.IsValid())
+				{
+					AllPrerequisites.Add(PrevTask);
+				}
 			}
 		}
-	}
 
-	// Collect Task of preceding tasks
-	TArray<UE::Tasks::FTask> Prerequisites;
-	for (const TSharedPtr<FIPGExclusiveTask>& PrecedingTask : PrecedingTasks)
-	{
-		if (PrecedingTask.IsValid() && PrecedingTask->InnerTask.IsValid())
-		{
-			Prerequisites.Add(PrecedingTask->InnerTask);
-		}
-	}
-
-	// Create task by passing prerequisites
-	TSharedRef<FIPGExclusiveTask> Self = AsShared();
-	TFunction<void()> BodyCopy = Body;
-
-	InnerTask = UE::Tasks::Launch(UE_SOURCE_LOCATION, [Self, BodyCopy]()
-		{
-			if (BodyCopy)
+		// 4) Launch after resolving dependencies, then route thread
+		UE::Tasks::FTask LaunchHandle = UE::Tasks::Launch(UE_SOURCE_LOCATION, [Body = MoveTemp(Body), ThreadMode, CompletionEvent]() mutable
 			{
-				BodyCopy();
-			}
-		}, Prerequisites);
+				// Game Thread
+				if (ThreadMode == EIPGThreadMode::GameThread)
+				{
+					AsyncTask(ENamedThreads::GameThread, [Body = MoveTemp(Body), CompletionEvent]() mutable
+						{
+							if (Body)
+							{
+								Body();
+							}
 
-	// Notify succedding task when building graph completes
-	FPlatformAtomics::AtomicStore(&bBuildComplete, 1);
+							CompletionEvent.Trigger();
+						});
+				}
+				// Worker Thread
+				else
+				{
+					if (Body)
+					{
+						Body();
+					}
+					CompletionEvent.Trigger();
+				}
+			}, AllPrerequisites);
 
-	return *this;
+		// 5) Prevent deadlock caused by launch failure
+		if (!LaunchHandle.IsValid())
+		{
+			// If a task launch fails due to a system error, 
+			// Immediately release the event tied to the resource to prevent subsequent tasks from being blocked
+			CompletionEvent.Trigger();
+		}
+
+		return CompletionEvent;
+	}
 }
