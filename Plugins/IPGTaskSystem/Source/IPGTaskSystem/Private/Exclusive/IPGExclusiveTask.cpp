@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "IPGExclusiveTask.h"
+#include "Exclusive/IPGExclusiveTask.h"
 #include "Misc/ScopeLock.h"
 
 UE::Tasks::FTask FIPGExclusiveResource::ExchangeTailTask(UE::Tasks::FTask NewTask)
