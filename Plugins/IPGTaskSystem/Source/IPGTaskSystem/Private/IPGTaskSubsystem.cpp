@@ -28,16 +28,16 @@ void UIPGTaskSubsystem::LaunchGraph()
 		});
 }
 
-void UIPGTaskSubsystem::DispatchAnimFrame(TArrayView<FNPCAnimContext> NPCAnimContexts, float DeltaTime)
-{
-	IPGPipe.Launch(UE_SOURCE_LOCATION, [this, NPCAnimContexts, DeltaTime]
-		{
-			// Step 1 - Animation Update
-			FTask AnimationUpdateTask = Launch(UE_SOURCE_LOCATION, [NPCAnimContexts, DeltaTime] {
-				for (FNPCAnimContext& NPCAnimContext : NPCAnimContexts)
-				{
-					//if (NPCAnimContext.should)
-				}
-				});
-		});
-}
+//void UIPGTaskSubsystem::DispatchAnimFrame(TArrayView<FNPCAnimContext> NPCAnimContexts, float DeltaTime)
+//{
+//	IPGPipe.Launch(UE_SOURCE_LOCATION, [this, NPCAnimContexts, DeltaTime]
+//		{
+//			// Step 1 - Animation Update
+//			FTask AnimationUpdateTask = Launch(UE_SOURCE_LOCATION, [NPCAnimContexts, DeltaTime] {
+//				for (FNPCAnimContext& NPCAnimContext : NPCAnimContexts)
+//				{
+//					//if (NPCAnimContext.should)
+//				}
+//				});
+//		});
+//}

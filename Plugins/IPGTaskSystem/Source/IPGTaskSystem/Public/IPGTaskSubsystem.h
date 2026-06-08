@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Tasks/Pipe.h"
-#include "IPGTaskContext.h"
 #include "IPGTaskSubsystem.generated.h"
 
 /**
@@ -23,5 +22,5 @@ public:
 private:
 	UE::Tasks::FPipe IPGPipe = UE::Tasks::FPipe(TEXT("IPGTaskSubsystem")); 
 
-	void DispatchAnimFrame(TArrayView<FNPCAnimContext> NPCAnimContexts, float DeltaTime);
+	//void DispatchAnimFrame(TArrayView<FNPCAnimContext> NPCAnimContexts, float DeltaTime);
 };
