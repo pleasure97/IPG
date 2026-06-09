@@ -5,7 +5,7 @@
 #include "Components/Slider.h"
 #include "Components/SizeBox.h"
 #include "CommonTextBlock.h"
-#include "CommonButtonBase.h"
+#include "Widget/HUD/InventoryCommonButton.h"
 
 /* "SPLIT AMOUNT" Getter */
 int32 UPopUpItemWidget::GetSplitAmount() const

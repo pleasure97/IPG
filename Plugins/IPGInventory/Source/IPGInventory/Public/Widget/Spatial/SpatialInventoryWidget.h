@@ -12,7 +12,7 @@ class UItemComponent;
 class UInventoryItem;
 class UCanvasPanel;
 class UWidgetSwitcher;
-class UCommonButtonBase;
+class UInventoryCommonButton;
 class UHoverItemWidget;
 class UInventoryGridWidget;
 class UEquipmentGridSlotWidget;
@@ -67,7 +67,7 @@ private:
 	UFUNCTION()
 	void EquipmentSlotItemClicked(UEquipmentSlotItemWidget* EquipmentSlotItem);
 
-	void SetActiveGrid(UInventoryGridWidget* InventoryGrid, UCommonButtonBase* Button);
+	void SetActiveGrid(UInventoryGridWidget* InventoryGrid, UInventoryCommonButton* Button);
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UInventoryGridWidget> Grid_Equipment;
@@ -84,16 +84,16 @@ private:
 	TWeakObjectPtr<UInventoryGridWidget> ActiveGrid;
 
 	/* Button */
-	void DisableButton(UCommonButtonBase* Button); 
+	void DisableButton(UInventoryCommonButton* Button);
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UCommonButtonBase> Button_Equipment;
+	TObjectPtr<UInventoryCommonButton> Button_Equipment;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UCommonButtonBase> Button_Consumable;
+	TObjectPtr<UInventoryCommonButton> Button_Consumable;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UCommonButtonBase> Button_Craftable;
+	TObjectPtr<UInventoryCommonButton> Button_Craftable;
 	
 	/* Item Description */
 	UItemDescriptionWidget* GetItemDescription(); 

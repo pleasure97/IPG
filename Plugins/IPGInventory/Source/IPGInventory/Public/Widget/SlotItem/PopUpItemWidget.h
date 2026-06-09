@@ -6,7 +6,7 @@
 #include "CommonUserWidget.h"
 #include "PopUpItemWidget.generated.h"
 
-class UCommonButtonBase;
+class UInventoryCommonButton;
 class UCommonTextBlock;
 class USlider;
 class USizeBox;
@@ -66,13 +66,13 @@ private:
 	int32 GridIndex = INDEX_NONE;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UCommonButtonBase> Button_Split;
+	TObjectPtr<UInventoryCommonButton> Button_Split;
 	
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UCommonButtonBase> Button_Drop;
+	TObjectPtr<UInventoryCommonButton> Button_Drop;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UCommonButtonBase> Button_Consume;
+	TObjectPtr<UInventoryCommonButton> Button_Consume;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<USlider> Slider_Split;

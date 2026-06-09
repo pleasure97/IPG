@@ -12,7 +12,7 @@ class UCommonLazyImage;
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract, BlueprintType, meta = (DisableNaiveTick))
 class IPGINVENTORY_API UInventoryCommonButton : public UCommonButtonBase
 {
 	GENERATED_BODY()

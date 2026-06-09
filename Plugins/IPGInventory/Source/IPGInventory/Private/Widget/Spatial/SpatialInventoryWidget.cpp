@@ -2,7 +2,7 @@
 
 
 #include "Widget/Spatial/SpatialInventoryWidget.h"
-#include "CommonButtonBase.h"
+#include "Widget/HUD/InventoryCommonButton.h"
 #include "Widget/Spatial/InventoryGridWidget.h"
 #include "Widget/SlotItem/HoverItemWidget.h"
 #include "Widget/SlotItem/EquipmentSlotItemWidget.h"
@@ -234,7 +234,7 @@ void USpatialInventoryWidget::EquipmentSlotItemClicked(UEquipmentSlotItemWidget*
 	BroadcastSlotClickedDelegates(ItemToEquip, ItemToUnequip);
 }
 
-void USpatialInventoryWidget::SetActiveGrid(UInventoryGridWidget* InventoryGrid, UCommonButtonBase* Button)
+void USpatialInventoryWidget::SetActiveGrid(UInventoryGridWidget* InventoryGrid, UInventoryCommonButton* Button)
 {
 	if (ActiveGrid.IsValid())
 	{
@@ -253,7 +253,7 @@ void USpatialInventoryWidget::SetActiveGrid(UInventoryGridWidget* InventoryGrid,
 }
 
 /*----------------------------------------------------- Button ----------------------------------------------------- */
-void USpatialInventoryWidget::DisableButton(UCommonButtonBase* Button)
+void USpatialInventoryWidget::DisableButton(UInventoryCommonButton* Button)
 {
 	if (!IsValid(Button))
 	{
