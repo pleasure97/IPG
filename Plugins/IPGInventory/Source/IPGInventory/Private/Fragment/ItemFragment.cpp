@@ -173,6 +173,16 @@ FGameplayTag FEquipmentFragment::GetEquipmentType() const
 	return EquipmentTypeTag;
 }
 
+TSubclassOf<AEquipmentActor> FEquipmentFragment::GetEquipActorClass() const
+{
+	return EquipActorClass;
+}
+
+FName FEquipmentFragment::GetSocketAttachPoint() const
+{
+	return SocketAttachPoint;
+}
+
 void FEquipmentFragment::SetEquipActor(AEquipmentActor* InEquipActor)
 {
 	EquipActor = InEquipActor;
@@ -185,17 +195,64 @@ AEquipmentActor* FEquipmentFragment::SpawnEquipActor(USkeletalMeshComponent* Equ
 		return nullptr;
 	}
 
-	return nullptr;
+	AEquipmentActor* SpawnedEquipmentActor = EquipMesh->GetWorld()->SpawnActor<AEquipmentActor>(EquipActorClass);
+	SpawnedEquipmentActor->AttachToComponent(EquipMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketAttachPoint);
+
+	return SpawnedEquipmentActor;
 }
 
 void FEquipmentFragment::DestroyEquipActor() const
 {
+	if (EquipActor.IsValid())
+	{
+		EquipActor->Destroy();
+	}
+}
+
+void FEquipmentFragment::OnEquip(APlayerController* PC)
+{
+	if (bEquipped)
+	{
+		return;
+	}
+	bEquipped = true;
+	for (auto& EquipModifier : EquipModifiers)
+	{
+		auto& EquipModifierRef = EquipModifier.GetMutable();
+		EquipModifierRef.OnEquip(PC);
+	}
+}
+
+void FEquipmentFragment::OnUnequip(APlayerController* PC)
+{
+	if (!bEquipped)
+	{
+		return;
+	}
+	bEquipped = false;
+	for (auto& EquipModifier : EquipModifiers)
+	{
+		auto& EquipModifierRef = EquipModifier.GetMutable(); 
+		EquipModifierRef.OnUnequip(PC);
+	}
 }
 
 void FEquipmentFragment::Assimilate(UCompositeBaseWidget* Composite) const
 {
+	FInventoryItemFragment::Assimilate(Composite);
+	for (const auto& EquipModifier : EquipModifiers)
+	{
+		const auto& EquipModifierRef = EquipModifier.Get(); 
+		EquipModifierRef.Assimilate(Composite);
+	}
 }
 
 void FEquipmentFragment::Manifest()
 {
+	FInventoryItemFragment::Manifest();
+	for (auto& EquipModifier : EquipModifiers)
+	{
+		auto& EquipModifierRef = EquipModifier.GetMutable();
+		EquipModifierRef.Manifest();
+	}
 }

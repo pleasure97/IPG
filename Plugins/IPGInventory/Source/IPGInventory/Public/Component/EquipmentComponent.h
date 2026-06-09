@@ -9,6 +9,11 @@
 class UInventoryComponent;
 class APlayerController;
 class USkeletalMeshComponent;
+class UInventoryItem;
+class AEquipmentActor;
+struct FEquipmentFragment;
+struct FItemManifest;
+struct FGameplayTag;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class IPGINVENTORY_API UEquipmentComponent : public UActorComponent
@@ -29,6 +34,21 @@ private:
 	void OnPossessedPawnChange(APawn* OldPawn, APawn* NewPawn);
 
 	void InitInventoryComponent();
+
+	UFUNCTION()
+	void OnItemEquipped(UInventoryItem* EquippedItem);
+
+	UFUNCTION()
+	void OnItemUnEquipped(UInventoryItem* UnEquippedItem);
+
+	AEquipmentActor* SpawnEquipmentActor(FEquipmentFragment* EquipmentFragment, const FItemManifest& ItemSpec, USkeletalMeshComponent* AttachSkeletalMesh);
+
+	AEquipmentActor* FindEquipmentActor(const FGameplayTag& InEquipmentTypeTag);
+
+	void RemoveEquipmentActor(const FGameplayTag& InEquipmentTypeTag);
+
+	UPROPERTY()
+	TArray<TObjectPtr<AEquipmentActor>> EquipmentActors;
 
 	TWeakObjectPtr<UInventoryComponent> InventoryComponent;
 	TWeakObjectPtr<APlayerController> OwningPlayerController;

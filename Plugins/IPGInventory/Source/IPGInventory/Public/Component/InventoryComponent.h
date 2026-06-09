@@ -14,10 +14,10 @@ class UInventoryBaseWidget;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemChange, UInventoryItem*, Item);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FNoRoomInInventory);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStackChange, const FSlotAvailabilityResult&, Result); 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemEquipStatusChange, UInventoryItem*, Item); 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemEquipStatusChange, UInventoryItem*, Item);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryMenuToggle, bool, bOpen);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable)
 class IPGINVENTORY_API UInventoryComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -69,6 +69,11 @@ protected:
 
 private:
 	void ConstructInventory();
+
+#if UE_WITH_IRIS
+	void ApplyIrisOwnerFilter(); 
+	void ApplyIrisStaticPriority();
+#endif
 
 	TWeakObjectPtr<APlayerController> OwningPlayerController;
 

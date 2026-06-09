@@ -7,6 +7,13 @@
 #include "Component/ItemComponent.h"
 #include "InventoryItem.h"
 #include "Fragment/ItemFragment.h"
+#if UE_WITH_IRIS
+#include "Net/Iris/ReplicationSystem/ReplicationSystemUtil.h"
+#include "Net/Iris/ReplicationSystem/EngineReplicationBridge.h"
+#include "Iris/ReplicationSystem/ReplicationSystem.h"
+#include "Iris/ReplicationSystem/NetRefHandle.h"
+#include "Iris/ReplicationSystem/Filtering/NetObjectFilter.h"
+#endif
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -32,6 +39,15 @@ void UInventoryComponent::BeginPlay()
 	Super::BeginPlay(); 
 
 	ConstructInventory();
+
+#if UE_WITH_IRIS
+	// Apply filter to server only 
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		ApplyIrisOwnerFilter(); 
+		ApplyIrisStaticPriority();
+	}
+#endif
 }
 
 void UInventoryComponent::ConstructInventory()
@@ -49,6 +65,75 @@ void UInventoryComponent::ConstructInventory()
 
 	ToggleInventoryMenu(false /*bOpen*/);
 }
+
+#if UE_WITH_IRIS
+void UInventoryComponent::ApplyIrisOwnerFilter()
+{
+	// Check if owner is valid
+	AActor* Owner = GetOwner(); 
+	if (!IsValid(Owner))
+	{
+		return;
+	}
+
+	// Check if replication system is valid
+	UReplicationSystem* ReplicationSystem = UE::Net::FReplicationSystemUtil::GetReplicationSystem(Owner);
+	if (!IsValid(ReplicationSystem))
+	{
+		return;
+	}
+
+	// Check if replication bridge is valid
+	UEngineReplicationBridge* ReplicationBridge = UE::Net::FReplicationSystemUtil::GetActorReplicationBridge(Owner);
+	if (!IsValid(ReplicationBridge))
+	{
+		return;
+	}
+
+	// Check if inventory component's net handle is valid
+	UE::Net::FNetRefHandle ObjectNetHandle = ReplicationBridge->GetReplicatedRefHandle(Owner);
+	if (!ObjectNetHandle.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Object Net Handle is Not Valid in UInventoryComponent::ApplyIrisOwnerFilter()")); 
+		return;
+	}
+	ReplicationSystem->SetFilter(ObjectNetHandle, UE::Net::ToOwnerFilterHandle);
+}
+
+void UInventoryComponent::ApplyIrisStaticPriority()
+{
+	// Check if owner is valid
+	AActor* Owner = GetOwner(); 
+	if (!IsValid(Owner))
+	{
+		return;
+	}
+
+	// Check if replication system is valid
+	UReplicationSystem* ReplicationSystem = UE::Net::FReplicationSystemUtil::GetReplicationSystem(Owner);
+	if (!IsValid(ReplicationSystem))
+	{
+		return;
+	}
+
+	// Check if replication bridge is valid
+	UEngineReplicationBridge* ReplicationBridge = UE::Net::FReplicationSystemUtil::GetActorReplicationBridge(Owner);
+	if (!IsValid(ReplicationBridge))
+	{
+		return;
+	}
+
+	// Check if inventory component's net handle is valid
+	UE::Net::FNetRefHandle ObjectNetHandle = ReplicationBridge->GetReplicatedRefHandle(Owner);
+	if (!ObjectNetHandle.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Object Net Handle is Not Valid in UInventoryComponent::ApplyIrisOwnerFilter()"));
+		return;
+	}
+
+	ReplicationSystem->SetStaticPriority(ObjectNetHandle, 3.f);
+}
+#endif
 
 void UInventoryComponent::ToggleInventoryMenu(bool bOpen)
 {
@@ -112,6 +197,10 @@ void UInventoryComponent::Server_AddNewItem_Implementation(UItemComponent* ItemC
 	UInventoryItem* NewItem = InventoryList.AddEntry(ItemComponent); 
 	NewItem->SetTotalStackCount(StackCount);
 
+#if UE_WITH_IRIS
+	NewItem->ApplyIrisOwnerFilter(GetOwner());
+#endif
+
 	if (GetOwner()->GetNetMode() == ENetMode::NM_ListenServer || GetOwner()->GetNetMode() == ENetMode::NM_Standalone)
 	{
 		OnItemAdded.Broadcast(NewItem); 
@@ -165,6 +254,8 @@ void UInventoryComponent::Server_DropItem_Implementation(UInventoryItem* Item, i
 	{
 		Item->SetTotalStackCount(NewStackCount);
 	}
+
+	MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, InventoryList, this);
 
 	SpawnDroppedItem(Item, StackCount);
 }

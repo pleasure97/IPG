@@ -24,9 +24,13 @@ public:
 	/* Item Stack */
 	bool IsStackable() const; 
 	int32 GetTotalStackCount() const { return TotalStackCount; }
-	void SetTotalStackCount(int32 Count) { TotalStackCount = Count; }
+	void SetTotalStackCount(int32 Count);
 
 	bool IsConsumable() const; 
+
+#if UE_WITH_IRIS
+	void ApplyIrisOwnerFilter(AActor* OwnerActor);
+#endif
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

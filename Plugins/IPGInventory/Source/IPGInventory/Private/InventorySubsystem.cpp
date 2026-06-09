@@ -9,7 +9,7 @@ UInventorySubsystem* UInventorySubsystem::Get(const UObject* WorldContextObject)
 	{
 		UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert);
 
-		return UGameInstance::GetSubsystem<UIPGUISubsystem>(World->GetGameInstance());
+		return UGameInstance::GetSubsystem<UInventorySubsystem>(World->GetGameInstance());
 	}
 
 	return nullptr;

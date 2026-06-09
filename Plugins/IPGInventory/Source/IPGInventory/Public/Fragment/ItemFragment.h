@@ -184,6 +184,14 @@ struct FEquipmentFragment : public FInventoryItemFragment
 
 public:
 	FGameplayTag GetEquipmentType() const; 
+
+	TSubclassOf<AEquipmentActor> GetEquipActorClass() const;
+
+	FName GetSocketAttachPoint() const;
+
+	void OnEquip(APlayerController* PC);
+	void OnUnequip(APlayerController* PC);
+
 	void SetEquipActor(AEquipmentActor* InEquipActor);
 
 	AEquipmentActor* SpawnEquipActor(USkeletalMeshComponent* EquipMesh) const;
@@ -193,9 +201,6 @@ protected:
 	virtual void Assimilate(UCompositeBaseWidget* Composite) const override;
 	virtual void Manifest() override; 
 	
-	void OnEquip(APlayerController* PC); 
-	void OnUnequip(APlayerController* PC);
-
 private:
 	UPROPERTY(EditAnywhere, Category = "Inventory")
 	TArray<TInstancedStruct<FEquipModifier>> EquipModifiers;
