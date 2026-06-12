@@ -34,5 +34,5 @@ private:
 	int32 FontSize_Label = 12;
 
 	UPROPERTY(EditAnywhere, Category = "Inventory")
-	int32 FontSize_Value = 18;
+	int32 FontSize_Value = 12;
 };
