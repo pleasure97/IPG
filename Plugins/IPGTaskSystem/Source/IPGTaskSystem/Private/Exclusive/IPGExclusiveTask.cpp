@@ -3,6 +3,9 @@
 
 #include "Exclusive/IPGExclusiveTask.h"
 #include "Misc/ScopeLock.h"
+#include "ProfilingDebugging/CpuProfilerTrace.h"
+
+UE_TRACE_CHANNEL_DEFINE(GuildTaskChannel)
 
 UE::Tasks::FTask FIPGExclusiveResource::ExchangeTailTask(UE::Tasks::FTask NewTask)
 {
@@ -23,6 +26,8 @@ namespace IPGTaskSystem
 		EIPGThreadMode ThreadMode,
 		UE::Tasks::FTask Prerequisites)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE_TEXT_ON_CHANNEL(DebugName, GuildTaskChannel);
+
 		// 1) Sort resource list to prevent deadlock
 		Resources.Sort([](const FIPGExclusiveResource& A, const FIPGExclusiveResource& B)
 		{

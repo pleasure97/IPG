@@ -3,7 +3,7 @@
 #include "Misc/AutomationTest.h"
 #include "Tasks/Task.h"
 #include "Guild/GuildResource.h"
-#include "IPGExclusiveTask.h"
+#include "Exclusive/IPGExclusiveTask.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
     FGuildExclusiveTaskTest,

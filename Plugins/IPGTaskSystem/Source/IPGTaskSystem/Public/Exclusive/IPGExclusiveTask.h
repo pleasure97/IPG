@@ -6,8 +6,11 @@
 #include "Tasks/Task.h"          
 #include "HAL/PlatformAtomics.h"
 #include "Misc/SpinLock.h"
+#include "Trace/Trace.h"
 
 class FIPGExclusiveTask;
+
+UE_TRACE_CHANNEL_EXTERN(GuildTaskChannel, IPGTASKSYSTEM_API)
 
 enum class EIPGThreadMode : uint8
 {

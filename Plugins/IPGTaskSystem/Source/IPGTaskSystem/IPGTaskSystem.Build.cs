@@ -38,6 +38,7 @@ public class IPGTaskSystem : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"TraceLog"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
