@@ -13,4 +13,14 @@ namespace IPGGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(UI_WidgetStack_GameMenu, "UI.WidgetStack.GameMenu");
 	UE_DEFINE_GAMEPLAY_TAG(UI_WidgetStack_GameHUD, "UI.WidgetStack.GameHUD");
 	UE_DEFINE_GAMEPLAY_TAG(UI_WidgetStack_FrontEnd, "UI.WidgetStack.FrontEnd");
+
+	/* Game Feature - Init State */
+	UE_DEFINE_GAMEPLAY_TAG(InitState_Spawned, "InitState.Spawned");
+	UE_DEFINE_GAMEPLAY_TAG(InitState_DataAvailable, "InitState.DataAvailable");
+	UE_DEFINE_GAMEPLAY_TAG(InitState_DataInitialized, "InitState.DataInitialized");
+	UE_DEFINE_GAMEPLAY_TAG(InitState_GameplayReady, "InitState.GameplayReady");
+
+	/* Input Tag */
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Move, "InputTag.Move");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Look, "InputTag.Look");
 }

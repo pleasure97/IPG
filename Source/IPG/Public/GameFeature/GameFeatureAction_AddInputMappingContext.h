@@ -17,12 +17,16 @@ struct FPriorityInputMappingContext
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, Category = "Input", meta=(AssetBundles="Client,Server"))
+	UPROPERTY(EditAnywhere, Category = "Input", meta = (AssetBundles = "Client,Server"))
 	TSoftObjectPtr<UInputMappingContext> InputMappingContext;
 
 	// Higher priority inupt mapping will be prioritized over mappings with a lower priority 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	int32 Priority = 0; 
+
+	// If true, then this mapping context will be registered with the settings when this game feature action is registered.
+	UPROPERTY(EditAnywhere, Category = "Input")
+	bool bRegisterWithSettings = true;
 };
 
 /**
