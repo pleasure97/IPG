@@ -14,7 +14,12 @@
 				"UMG",
 				"GameFeatures",
 				"CommonUI",
-				"DeveloperSettings"
+				"DeveloperSettings",
+				"CoreUObject",
+				"EnhancedInput",
+				"IrisCore",
+				"ModularGameplay",
+				"GameplayAbilities"
 			]
 		}
 	],
