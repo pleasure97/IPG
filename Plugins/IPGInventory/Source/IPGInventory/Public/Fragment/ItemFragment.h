@@ -242,3 +242,17 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Inventory", meta = (ExcludeBaseStruct))
 	TArray<TInstancedStruct<FConsumeModifier>> ConsumeModifiers;
 };
+
+/* Price */
+USTRUCT(BlueprintType)
+struct FPriceFragment : public FItemFragment
+{
+	GENERATED_BODY()
+
+private:
+	UPROPERTY(EditAnywhere, Category = "Inventory")
+	int64 SalePrice = 0;
+
+	UPROPERTY(EditAnywhere, Category = "Inventory")
+	int64 PurchasePrice = 0;
+};
