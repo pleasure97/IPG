@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "NNEDataAsset.h"
 #include "NNEDataCollectComponent.generated.h"
 
 
@@ -14,4 +15,13 @@ class NNEDATACOLLECTOR_API UNNEDataCollectComponent : public UActorComponent
 
 public:	
 	UNNEDataCollectComponent();
+
+	UPROPERTY(EditAnywhere, Category = "NNE|DataCollect")
+	TObjectPtr<UNNEDataAsset> NNEDataAsset;
+
+	UFUNCTION(BlueprintCallable, Category = "NNE|DataCollect")
+	void SetValue(const FString& Name, float Value);
+
+	/*UFUNCTION(BlueprintCallable, Category = "NNE|DataCollect")
+	void Commit();*/
 };

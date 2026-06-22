@@ -7,3 +7,8 @@ UNNEDataCollectComponent::UNNEDataCollectComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 }
+
+void UNNEDataCollectComponent::SetValue(const FString& Name, float Value)
+{
+
+}

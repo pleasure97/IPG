@@ -18,7 +18,7 @@ class NNEDATACOLLECTOR_API UNNEDataCollectSubsystem : public UWorldSubsystem
 public:
 	void SaveRecord(const INNEDataRecord& DataRecord);
 	
-	UFUNCTION(BlueprintCallable, Category="NNE|Data")
+	UFUNCTION(BlueprintCallable, Category="NNE|DataCollect")
 	void FlushAll(); 
 
 	virtual void Deinitialize() override;
