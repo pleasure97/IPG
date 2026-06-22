@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonUserWidget.h"
+#include "CommonActivatableWidget.h"
 #include "Type/InventoryGridType.h"
 #include "InventoryBaseWidget.generated.h"
 
@@ -15,7 +15,7 @@ class UHoverItemWidget;
  * 
  */
 UCLASS()
-class IPGINVENTORY_API UInventoryBaseWidget : public UCommonUserWidget
+class IPGINVENTORY_API UInventoryBaseWidget : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 

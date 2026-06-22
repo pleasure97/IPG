@@ -107,7 +107,15 @@ void UItemTraceComponent::TraceItem()
 	// Single Line Trace (Trace Start, Trace End)
 	const FVector TraceEnd = TraceStart + Forward * TraceLength;
 	FHitResult HitResult;
-	GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ItemTraceChannel); 
+
+	// Setup collision query parameters to ignore the owner character
+	FCollisionQueryParams CollisionQueryParams;
+	if (AActor* OwnerActor = OwnerPlayerController->GetPawn())
+	{
+		CollisionQueryParams.AddIgnoredActor(OwnerActor);
+	}
+
+	GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ItemTraceChannel, CollisionQueryParams); 
 	// Save Current and Last Traced Actor
 	LastTracedActor = CurrentTracedActor;
 	CurrentTracedActor = HitResult.GetActor(); 

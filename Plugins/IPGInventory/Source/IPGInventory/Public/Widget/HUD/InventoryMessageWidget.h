@@ -6,7 +6,7 @@
 #include "CommonUserWidget.h"
 #include "InventoryMessageWidget.generated.h"
 
-class UTextBlock;
+class UCommonTextBlock;
 
 /**
  * 
@@ -30,7 +30,7 @@ protected:
 
 private:
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> TextBlock_Message;
+	TObjectPtr<UCommonTextBlock> TextBlock_Message;
 
 	UPROPERTY(EditAnywhere, Category = "Inventory")
 	float MessageLifetime = 3.f;

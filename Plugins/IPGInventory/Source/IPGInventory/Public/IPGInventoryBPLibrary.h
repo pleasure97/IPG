@@ -21,6 +21,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	static UInventoryComponent* GetInventoryComponent(const APlayerController* PlayerController);
 
+	UFUNCTION(BlueprintCallable)
+	static EItemCategory GetItemContegoryFromItemComponent(UItemComponent* ItemComponent);
+
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	static UHoverItemWidget* GetHoverItem(APlayerController* PC);
 

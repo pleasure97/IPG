@@ -13,7 +13,7 @@ class UInventoryComponent;
 class UInventoryHUDWidget;
 struct FEnhancedInputActionEventBinding;
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable)
 class IPGINVENTORY_API UItemTraceComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -24,6 +24,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ToggleInventory(); 
 
+	UFUNCTION(BlueprintCallable)
+	void PrimaryInteract();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -32,7 +35,6 @@ protected:
 private:
 	void TraceItem();
 
-	void PrimaryInteract(); 
 	void CreateHUDWidget(); 
 
 	/* Item Trace */

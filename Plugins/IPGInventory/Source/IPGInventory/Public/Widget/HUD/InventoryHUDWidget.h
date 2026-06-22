@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonUserWidget.h"
+#include "CommonActivatableWidget.h"
 #include "InventoryHUDWidget.generated.h"
 
 class UInventoryMessageWidget;
@@ -12,7 +12,7 @@ class UInventoryMessageWidget;
  * 
  */
 UCLASS()
-class IPGINVENTORY_API UInventoryHUDWidget : public UCommonUserWidget
+class IPGINVENTORY_API UInventoryHUDWidget : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 	

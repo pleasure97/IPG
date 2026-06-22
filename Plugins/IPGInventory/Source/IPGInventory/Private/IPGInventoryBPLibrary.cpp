@@ -2,6 +2,7 @@
 
 #include "IPGInventoryBPLibrary.h"
 #include "Component/InventoryComponent.h"
+#include "Component/ItemComponent.h"
 #include "Widget/InventoryBaseWidget.h"
 #include "Blueprint/SlateBlueprintLibrary.h"
 
@@ -14,6 +15,15 @@ UInventoryComponent* UIPGInventoryBPLibrary::GetInventoryComponent(const APlayer
 	}
 	UInventoryComponent* InventoryComponent = PlayerController->FindComponentByClass<UInventoryComponent>();
 	return InventoryComponent;
+}
+
+EItemCategory UIPGInventoryBPLibrary::GetItemContegoryFromItemComponent(UItemComponent* ItemComponent)
+{
+	if (!IsValid(ItemComponent))
+	{
+		return EItemCategory::None;
+	}
+	return ItemComponent->GetItemManifest().GetItemCategory();
 }
 
 UHoverItemWidget* UIPGInventoryBPLibrary::GetHoverItem(APlayerController* PC)

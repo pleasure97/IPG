@@ -154,15 +154,18 @@ void UInventoryGridWidget::DropItem()
 
 void UInventoryGridWidget::NativeOnInitialized()
 {
-	Super::NativeOnInitialized(); 
+	Super::NativeOnInitialized();
 
 	ConstructGrid();
 
 	// Set inventory component and bind 'item added', 'stack changed', and 'menu toggled' delegates
 	InventoryComponent = UIPGInventoryBPLibrary::GetInventoryComponent(GetOwningPlayer()); 
-	InventoryComponent->OnItemAdded.AddDynamic(this, &UInventoryGridWidget::AddItem);
-	InventoryComponent->OnStackChanged.AddDynamic(this, &UInventoryGridWidget::AddStacks); 
-	InventoryComponent->OnInventoryMenuToggled.AddDynamic(this, &UInventoryGridWidget::OnInventoryMenuToggled);
+	if (InventoryComponent.IsValid())
+	{
+		InventoryComponent->OnItemAdded.AddDynamic(this, &UInventoryGridWidget::AddItem);
+		InventoryComponent->OnStackChanged.AddDynamic(this, &UInventoryGridWidget::AddStacks);
+		InventoryComponent->OnInventoryMenuToggled.AddDynamic(this, &UInventoryGridWidget::OnInventoryMenuToggled);
+	}
 }
 
 void UInventoryGridWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -431,7 +434,7 @@ USlotItemWidget* UInventoryGridWidget::CreateSlotItem(UInventoryItem* Item, cons
 	SlotItem->SetInventoryItem(Item); 
 	SetSlotItemImage(SlotItem, GridFragment, ImageFragment);
 
-	return nullptr;
+	return SlotItem;
 }
 
 void UInventoryGridWidget::SetSlotItemImage(const USlotItemWidget* SlotItem, const FGridFragment* GridFragment, const FImageFragment* ImageFragment) const

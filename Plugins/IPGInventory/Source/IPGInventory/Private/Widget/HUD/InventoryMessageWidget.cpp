@@ -2,7 +2,7 @@
 
 
 #include "Widget/HUD/InventoryMessageWidget.h"
-#include "Components/TextBlock.h"
+#include "CommonTextBlock.h"
 
 void UInventoryMessageWidget::NativeOnInitialized()
 {

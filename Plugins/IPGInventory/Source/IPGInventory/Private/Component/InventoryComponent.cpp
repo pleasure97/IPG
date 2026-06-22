@@ -16,6 +16,7 @@
 #endif
 
 UInventoryComponent::UInventoryComponent()
+	: InventoryList(this) // Set Inventory Component to Owner of Inventory Fast Array Serializer 
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true); 
