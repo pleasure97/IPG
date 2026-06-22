@@ -46,7 +46,7 @@ private:
 	/* UGameFeatureAction_WorldActionBase interface End */
 
 	void Reset(FInputBindingContextData& ActiveData);
-	void HandlePawnExtension(AActor* Actor, FName EventName, FGameFeatureStateChangeContext ChangeContext);
+	void HandleControllerExtension(AActor* Actor, FName EventName, FGameFeatureStateChangeContext ChangeContext);
 
 	/* Input Binding Util */
 	void AddInputMappingForPlayer(APawn* Pawn, FInputBindingContextData& ActiveData);

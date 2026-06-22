@@ -55,9 +55,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TArray<FPriorityInputMappingContext> PriorityInputMappingContexts; 
 
-	UPROPERTY(EditAnywhere, Category = "Input")
-	TObjectPtr<UIPGInputConfig> InputConfig;
-
 private:
 	struct FInputMappingContextData
 	{
@@ -70,6 +67,11 @@ private:
 	// Delegate for when game instance is changed to register input mapping context
 	FDelegateHandle RegisterInputMappingContextsHandle;
 
+	/* Should override GameFeatureAction_WorldActionBase interface */
+	virtual void AddToWorld(const FWorldContext& WorldContext, const FGameFeatureStateChangeContext& ChangeContext) override;
+	/* GameFeatureAction_WorldActionBase interface End */
+	void HandleControllerExtension(AActor* Actor, FName EventName, FGameFeatureStateChangeContext ChangeContext);
+
 	/* Input Mapping Context Registration Util */
 	void RegisterInputMappingContext();
 	void RegisterInputMappingContextForGameInstance(UGameInstance* GameInstance);
@@ -80,6 +82,8 @@ private:
 	void UnregisterInputMappingContextForGameInstance(UGameInstance* GameInstance);
 	void UnregisterInputMappingContextForLocalPlayer(ULocalPlayer* LocalPlayer);
 	void Reset(FInputMappingContextData& ActiveInputMappingContextData);
+
+	void AddInputMappingForPlayer(UPlayer* Player, FInputMappingContextData& ActiveData);
 	void RemoveInputMappingContext(APlayerController* PlayerController, FInputMappingContextData& ActiveInputMappingContextData);
 
 	void ManageInputMappingContextForLocalPlayer(ULocalPlayer* LocalPlayer, bool bRegister);

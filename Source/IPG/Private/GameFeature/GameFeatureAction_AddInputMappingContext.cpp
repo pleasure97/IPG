@@ -7,6 +7,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "UserSettings/EnhancedInputUserSettings.h"
 #include "GameFramework/PlayerController.h"
+#include "Components/GameFrameworkComponentManager.h"
+#include "Player/IPGCharacterComponent.h"
 
 void UGameFeatureAction_AddInputMappingContext::OnGameFeatureRegistering()
 {
@@ -68,10 +70,59 @@ EDataValidationResult UGameFeatureAction_AddInputMappingContext::IsDataValid(FDa
 }
 #endif
 
+void UGameFeatureAction_AddInputMappingContext::AddToWorld(const FWorldContext& WorldContext, const FGameFeatureStateChangeContext& ChangeContext)
+{
+	// Get World, Game Instance, and Active Input Mapping Context Data
+	UWorld* World = WorldContext.World(); 
+	UGameInstance* GameInstance = WorldContext.OwningGameInstance;
+	FInputMappingContextData& ActiveInputMappingContextData = InputMappingContextDataMap.FindOrAdd(ChangeContext);
+
+	// Check if targets above are valid
+	if ((GameInstance != nullptr) && (World != nullptr) && World->IsGameWorld())
+	{
+		if (UGameFrameworkComponentManager* ComponentManager = UGameInstance::GetSubsystem<UGameFrameworkComponentManager>(GameInstance))
+		{
+			// Bind a extension handler delegate from game framework component manager
+			UGameFrameworkComponentManager::FExtensionHandlerDelegate AddAbilitiesDelegate =
+				UGameFrameworkComponentManager::FExtensionHandlerDelegate::CreateUObject(
+					this, &UGameFeatureAction_AddInputMappingContext::HandleControllerExtension, ChangeContext);
+
+			// Add the extension handler to game framework component manager
+			TSharedPtr<FComponentRequestHandle> ExtensionRequestHandle =
+				ComponentManager->AddExtensionHandler(APlayerController::StaticClass(), AddAbilitiesDelegate);
+
+			ActiveInputMappingContextData.ExtensionRequestHandles.Add(ExtensionRequestHandle);
+		}
+	}
+}
+
+void UGameFeatureAction_AddInputMappingContext::HandleControllerExtension(AActor* Actor, FName EventName, FGameFeatureStateChangeContext ChangeContext)
+{
+	APlayerController* PlayerController = CastChecked<APlayerController>(Actor);
+	FInputMappingContextData& ActiveInputMappingContextData = InputMappingContextDataMap.FindOrAdd(ChangeContext);
+
+	// Remove the input mapping context when 'Extension Removed' or 'Receiver Removed'
+	if ((EventName == UGameFrameworkComponentManager::NAME_ExtensionRemoved) || (EventName == UGameFrameworkComponentManager::NAME_ReceiverRemoved))
+	{
+		RemoveInputMappingContext(PlayerController, ActiveInputMappingContextData);
+	}
+	// Add the input mapping when 'Extension Added' or 'Bind Inputs Now'
+	else if ((EventName == UGameFrameworkComponentManager::NAME_ExtensionAdded) || (EventName == UIPGCharacterComponent::NAME_BindInputsNow))
+	{
+		AddInputMappingForPlayer(PlayerController->GetLocalPlayer(), ActiveInputMappingContextData);
+	}
+}
+
 void UGameFeatureAction_AddInputMappingContext::RegisterInputMappingContext()
 {
 	RegisterInputMappingContextsHandle = FWorldDelegates::OnStartGameInstance.AddUObject(
 		this, &UGameFeatureAction_AddInputMappingContext::RegisterInputMappingContextForGameInstance);
+
+	const TIndirectArray<FWorldContext>& WorldContexts = GEngine->GetWorldContexts();
+	for (TIndirectArray<FWorldContext>::TConstIterator WorldContextIterator = WorldContexts.CreateConstIterator(); WorldContextIterator; ++WorldContextIterator)
+	{
+		RegisterInputMappingContextForGameInstance(WorldContextIterator->OwningGameInstance);
+	}
 }
 
 void UGameFeatureAction_AddInputMappingContext::RegisterInputMappingContextForGameInstance(UGameInstance* GameInstance)
@@ -168,6 +219,24 @@ void UGameFeatureAction_AddInputMappingContext::Reset(FInputMappingContextData& 
 		else
 		{
 			ActiveInputMappingContextData.ControllersAdded.Pop();
+		}
+	}
+}
+
+void UGameFeatureAction_AddInputMappingContext::AddInputMappingForPlayer(UPlayer* Player, FInputMappingContextData& ActiveData)
+{
+	// Get enhanced input local player subsystem
+	if (ULocalPlayer* LocalPlayer = Cast<ULocalPlayer>(Player))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* EnhancedInputLocalPlayerSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+		{
+			for (const FPriorityInputMappingContext& PriorityInputMappingContext : PriorityInputMappingContexts)
+			{
+				if (const UInputMappingContext* IMC = PriorityInputMappingContext.InputMappingContext.LoadSynchronous())
+				{
+					EnhancedInputLocalPlayerSubsystem->AddMappingContext(IMC, PriorityInputMappingContext.Priority);
+				}
+			}
 		}
 	}
 }
