@@ -21,7 +21,27 @@
 /*----------------------------------------------------- Inventory Base Widget ----------------------------------------------------- */
 FSlotAvailabilityResult USpatialInventoryWidget::HasRoomForItem(UItemComponent* ItemComponent) const
 {
-	return FSlotAvailabilityResult();
+	// Get Item Category from Item Component, and Process to Check if there are Enough Room in Each Item Grid
+	switch (UIPGInventoryBPLibrary::GetItemContegoryFromItemComponent(ItemComponent))
+	{
+	case EItemCategory::Equippable:
+	{
+		return Grid_Equipment->HasRoomForItem(ItemComponent);
+	}
+	case EItemCategory::Consumable:
+	{
+		return Grid_Consumable->HasRoomForItem(ItemComponent);
+	}
+	case EItemCategory::Craftable:
+	{
+		return Grid_Craftable->HasRoomForItem(ItemComponent);
+	}
+	default:
+	{
+		UE_LOG(LogTemp, Error, TEXT("Inventory Item Component does Not Have Valid Item Category."));
+		return FSlotAvailabilityResult();
+	}
+	}
 }
 
 void USpatialInventoryWidget::OnItemHovered(UInventoryItem* Item)
