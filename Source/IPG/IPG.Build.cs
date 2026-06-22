@@ -25,7 +25,8 @@ public class IPG : ModuleRules
             "GameplayTasks",
             "GameplayAbilities",
             "ModularGameplay",
-			"IPGTaskSystem"
+			"IPGTaskSystem", 
+			"IPGInventory"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {
