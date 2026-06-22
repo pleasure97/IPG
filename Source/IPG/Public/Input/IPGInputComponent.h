@@ -8,6 +8,8 @@
 #include "Input/IPGInputConfig.h"
 #include "IPGInputComponent.generated.h"
 
+class UEnhancedInputLocalPlayerSubsystem;
+
 /**
  * 
  */
@@ -19,16 +21,18 @@ class IPG_API UIPGInputComponent : public UEnhancedInputComponent
 public:
 	UIPGInputComponent(); 
 
-	template<class UserClass, typename FuncType>
+	void AddInputMappings(const UIPGInputConfig* InputConfig, UEnhancedInputLocalPlayerSubsystem* InputSubsystem) const;
+
+	template<typename UserClass, typename FuncType>
 	void BindNativeAction(const UIPGInputConfig* InputConfig, const FGameplayTag& InputTag, ETriggerEvent TriggerEvent, UserClass* Object, FuncType Func);
 
-	template<class UserClass, typename PressedFuncType, typename ReleasedFuncType>
+	template<typename UserClass, typename PressedFuncType, typename ReleasedFuncType>
 	void BindAbilityActions(const UIPGInputConfig* InputConfig, UserClass* Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc, TArray<uint32>& BindingHandles);
 
 	void RemoveBindings(TArray<uint32>& BindingHandles);
 };
 
-template<class UserClass, typename FuncType>
+template<typename UserClass, typename FuncType>
 void UIPGInputComponent::BindNativeAction(const UIPGInputConfig* InputConfig, const FGameplayTag& InputTag, ETriggerEvent TriggerEvent, UserClass* Object, FuncType Func)
 {
 	check(InputConfig);
@@ -38,7 +42,7 @@ void UIPGInputComponent::BindNativeAction(const UIPGInputConfig* InputConfig, co
 	}
 }
 
-template<class UserClass, typename PressedFuncType, typename ReleasedFuncType>
+template<typename UserClass, typename PressedFuncType, typename ReleasedFuncType>
 void UIPGInputComponent::BindAbilityActions(const UIPGInputConfig* InputConfig, UserClass* Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc, TArray<uint32>& BindHandles)
 {
 	check(InputConfig);

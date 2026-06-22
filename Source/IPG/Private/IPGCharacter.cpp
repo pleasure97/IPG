@@ -2,7 +2,7 @@
 
 #include "IPGCharacter.h"
 #include "Engine/LocalPlayer.h"
-#include "Camera/CameraComponent.h"
+#include "Camera/IPGCameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -11,6 +11,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "IPG.h"
+#include "AbilitySystemComponent.h"
+#include "Player/IPGPlayerExtensionComponent.h"
 
 AIPGCharacter::AIPGCharacter()
 {
@@ -42,12 +44,30 @@ AIPGCharacter::AIPGCharacter()
 	CameraBoom->bUsePawnControlRotation = true;
 
 	// Create a follow camera
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera = CreateDefaultSubobject<UIPGCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+
+	PlayerExtensionComponent = CreateDefaultSubobject<UIPGPlayerExtensionComponent>(TEXT("PlayerExtensionComponent"));
+	PlayerExtensionComponent->RegisterAndCallWhenAbilitySystemInitialized(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &AIPGCharacter::OnAbilitySystemInitialized));
+	PlayerExtensionComponent->RegisterWhenAbilitySystemUninitialized(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &AIPGCharacter::OnAbilitySystemUninitialized));
+
+}
+
+void AIPGCharacter::TriggerGuildExclusiveTask()
+{
+	UE_LOG(LogTemp, Log, TEXT("[Guild] TriggerGuildExclusiveTask called"));
+
+	GuildExclusiveTask(
+		&MasterResource,
+		&GuildResource,
+		&MemberResource
+	);
 }
 
 void AIPGCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -70,6 +90,8 @@ void AIPGCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	{
 		UE_LOG(LogIPG, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
+
+	PlayerExtensionComponent->SetupPlayerInputComponent();
 }
 
 void AIPGCharacter::Move(const FInputActionValue& Value)
@@ -88,6 +110,16 @@ void AIPGCharacter::Look(const FInputActionValue& Value)
 
 	// route the input
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
+}
+
+void AIPGCharacter::OnAbilitySystemInitialized()
+{
+	// TODO
+}
+
+void AIPGCharacter::OnAbilitySystemUninitialized()
+{
+	// TODO
 }
 
 void AIPGCharacter::DoMove(float Right, float Forward)
@@ -130,4 +162,9 @@ void AIPGCharacter::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();
+}
+
+UAbilitySystemComponent* AIPGCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }

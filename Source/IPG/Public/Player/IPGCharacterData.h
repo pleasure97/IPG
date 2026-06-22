@@ -23,10 +23,10 @@ public:
 	TSubclassOf<APawn> PawnClass;
 
 	// Ability sets to grant to this pawn's ability system.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Lyra|Abilities")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "IPG|Abilities")
 	TArray<TObjectPtr<UIPGAbilitySet>> AbilitySets;
 
 	// Input configuration used by player controlled pawns to create input mappings and bind input actions.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Lyra|Input")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "IPG|Input")
 	TObjectPtr<UIPGInputConfig> InputConfig;
 };

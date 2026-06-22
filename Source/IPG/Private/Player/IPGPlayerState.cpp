@@ -8,6 +8,14 @@
 #include "GameFramework/GameStateBase.h"
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
+#include "Ability/IPGAbilitySystemComponent.h"
+
+AIPGPlayerState::AIPGPlayerState()
+{
+	AbilitySystemComponent = CreateDefaultSubobject<UIPGAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+}
 
 void AIPGPlayerState::PostInitializeComponents()
 {
@@ -33,6 +41,11 @@ void AIPGPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	SharedParams.bIsPushBased = true;
 
 	DOREPLIFETIME_WITH_PARAMS_FAST(AIPGPlayerState, CharacterData, SharedParams);
+}
+
+UAbilitySystemComponent* AIPGPlayerState::GetAbilitySystemComponent() const
+{
+	return GetIPGAbilitySystemComponent();
 }
 
 void AIPGPlayerState::SetCharacterData(const UIPGCharacterData* InCharacterData)

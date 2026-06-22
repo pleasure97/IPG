@@ -25,6 +25,7 @@ public:
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
+	virtual APawn* SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform) override;
 	/* AGameModeBase Interface End */
 	UFUNCTION(BlueprintCallable, Category = "IPG|Character")
 	const UIPGCharacterData* GetCharacterDataForController(const AController* InController) const;

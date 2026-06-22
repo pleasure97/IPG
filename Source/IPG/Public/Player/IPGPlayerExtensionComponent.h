@@ -26,6 +26,7 @@ public:
 	static const FName NAME_ActorFeatureName;
 
 	const UIPGCharacterData* GetCharacterData() const { return CharacterData; }
+	void SetCharacterData(const UIPGCharacterData* InCharacterData);
 
 	/* IGameFrameworkInitStateInterface interface */ 
 	virtual FName GetFeatureName() const override;
@@ -33,11 +34,17 @@ public:
 	virtual void OnActorInitStateChanged(const FActorInitStateChangedParams& Params) override;
 	virtual void CheckDefaultInitialization() override;
 
+	void SetupPlayerInputComponent();
+
 	/* Ability System */
 	// Should be called by the owning pawn to become the avatar of the ability system.
 	void InitializeAbilitySystem(UIPGAbilitySystemComponent* InAbilitySystemComponent, AActor* InOwnerActor);
 	// Should be called by the owning pawn to remove itself as the avatar of the ability system.
 	void UninitializeAbilitySystem();
+	// Register with the OnAbilitySystemInitialized delegate and broadcast if our pawn has been registered with the ability system component
+	void RegisterAndCallWhenAbilitySystemInitialized(FSimpleMulticastDelegate::FDelegate Delegate);
+	// Register with the OnAbilitySystemUninitialized delegate fired when our pawn is removed as the ability system's avatar actor 
+	void RegisterWhenAbilitySystemUninitialized(FSimpleMulticastDelegate::FDelegate Delegate);
 	// Gets the current ability system component, which may be owned by a different actor
 	UFUNCTION(BlueprintPure, Category = "Lyra|Pawn")
 	UIPGAbilitySystemComponent* GetIPGAbilitySystemComponent() const { return AbilitySystemComponent; }

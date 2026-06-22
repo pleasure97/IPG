@@ -6,6 +6,7 @@
 #include "Components/GameFrameworkComponentManager.h"
 #include "Net/UnrealNetwork.h"
 #include "Ability/IPGAbilitySystemComponent.h"
+#include "Player/IPGCharacterData.h"
 
 const FName UIPGPlayerExtensionComponent::NAME_ActorFeatureName("PlayerExtension");
 
@@ -19,6 +20,30 @@ UIPGPlayerExtensionComponent::UIPGPlayerExtensionComponent(const FObjectInitiali
 
 	CharacterData = nullptr;
 	AbilitySystemComponent = nullptr;
+}
+
+void UIPGPlayerExtensionComponent::SetCharacterData(const UIPGCharacterData* InCharacterData)
+{
+	check(InCharacterData);
+
+	APawn* Pawn = GetPawnChecked<APawn>();
+
+	if (Pawn->GetLocalRole() != ROLE_Authority)
+	{
+		return;
+	}
+
+	if (CharacterData)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Trying to set CharacterData on pawn that already has valid CharacterData"));
+		return;
+	}
+
+	CharacterData = InCharacterData;
+
+	Pawn->ForceNetUpdate();
+
+	CheckDefaultInitialization();
 }
 
 FName UIPGPlayerExtensionComponent::GetFeatureName() const
@@ -103,6 +128,11 @@ void UIPGPlayerExtensionComponent::CheckDefaultInitialization()
 	ContinueInitStateChain(StateChain);
 }
 
+void UIPGPlayerExtensionComponent::SetupPlayerInputComponent()
+{
+	CheckDefaultInitialization();
+}
+
 void UIPGPlayerExtensionComponent::InitializeAbilitySystem(UIPGAbilitySystemComponent* InAbilitySystemComponent, AActor* InOwnerActor)
 {
 	check(InAbilitySystemComponent);
@@ -151,6 +181,27 @@ void UIPGPlayerExtensionComponent::UninitializeAbilitySystem()
 		OnAbilitySystemUninitialized.Broadcast();
 	}
 	AbilitySystemComponent = nullptr;
+}
+
+void UIPGPlayerExtensionComponent::RegisterAndCallWhenAbilitySystemInitialized(FSimpleMulticastDelegate::FDelegate Delegate)
+{
+	if (!OnAbilitySystemInitialized.IsBoundToObject(Delegate.GetUObject()))
+	{
+		OnAbilitySystemInitialized.Add(Delegate);
+	}
+
+	if (AbilitySystemComponent)
+	{
+		Delegate.Execute();
+	}
+}
+
+void UIPGPlayerExtensionComponent::RegisterWhenAbilitySystemUninitialized(FSimpleMulticastDelegate::FDelegate Delegate)
+{
+	if (!OnAbilitySystemUninitialized.IsBoundToObject(Delegate.GetUObject()))
+	{
+		OnAbilitySystemUninitialized.Add(Delegate);
+	}
 }
 
 void UIPGPlayerExtensionComponent::OnRegister()

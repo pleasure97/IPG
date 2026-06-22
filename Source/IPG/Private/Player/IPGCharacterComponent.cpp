@@ -15,6 +15,7 @@
 #include "Ability/IPGAbilitySystemComponent.h"
 #include "InputMappingContext.h"
 #include "GameFeature/GameFeatureAction_AddInputMappingContext.h"
+#include "Component/ItemTraceComponent.h"
 
 const FName UIPGCharacterComponent::NAME_ActorFeatureName("IPGCharacter");
 const FName UIPGCharacterComponent::NAME_BindInputsNow("BindInputsNow");
@@ -23,6 +24,66 @@ UIPGCharacterComponent::UIPGCharacterComponent(const FObjectInitializer& ObjectI
 	: Super(ObjectInitializer)
 {
 	bReadyToBindInputs = false;
+}
+
+bool UIPGCharacterComponent::IsReadyToBindInputs() const
+{
+	return bReadyToBindInputs;
+}
+
+void UIPGCharacterComponent::AddAdditionalInputConfig(const UIPGInputConfig* InputConfig)
+{
+	const APawn* Pawn = GetPawn<APawn>();
+	if (!Pawn)
+	{
+		return;
+	}
+
+	const APlayerController* PlayerController = GetController<APlayerController>();
+	check(PlayerController);
+
+	const ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
+	check(LocalPlayer);
+
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	check(Subsystem);
+
+	if (const UIPGPlayerExtensionComponent* PlayerExtensionComponent = Pawn->FindComponentByClass<UIPGPlayerExtensionComponent>())
+	{
+		UIPGInputComponent* IPGInputComponent = Pawn->FindComponentByClass<UIPGInputComponent>();
+		if(ensure(IPGInputComponent))
+		{
+			TArray<uint32> BindHandles;
+
+			// Bind ability actions
+			IPGInputComponent->BindAbilityActions(
+				InputConfig, 
+				this, 
+				&UIPGCharacterComponent::AbilityInputTagPressed, 
+				&UIPGCharacterComponent::AbilityInputTagReleased, 
+				/*out*/ BindHandles);
+			
+			// TODO - Bind native actions
+			IPGInputComponent->BindNativeAction(
+				InputConfig,
+				IPGGameplayTags::InputTag_ToggleInventory,
+				ETriggerEvent::Triggered,
+				this,
+				&UIPGCharacterComponent::Input_ToggleInventory);
+
+			IPGInputComponent->BindNativeAction(
+				InputConfig,
+				IPGGameplayTags::InputTag_PickUp,
+				ETriggerEvent::Triggered,
+				this,
+				&UIPGCharacterComponent::Input_PickUp);
+		}
+	}
+}
+
+void UIPGCharacterComponent::RemoveAdditionalInputConfig(const UIPGInputConfig* InputConfig)
+{
+
 }
 
 FName UIPGCharacterComponent::GetFeatureName() const
@@ -49,10 +110,10 @@ bool UIPGCharacterComponent::CanChangeInitState(UGameFrameworkComponentManager* 
 	else if (CurrentState == IPGGameplayTags::InitState_Spawned && DesiredState == IPGGameplayTags::InitState_DataAvailable)
 	{
 		// The player state is required.
-		if (!GetPlayerState<AIPGPlayerState>())
+		/*if (!GetPlayerState<AIPGPlayerState>())
 		{
 			return false;
-		}
+		}*/
 
 		// If pawn is not simulated proxy, we need to wait for a controller with registered ownership of the player state.
 		if (Pawn->GetLocalRole() != ROLE_SimulatedProxy)
@@ -160,6 +221,40 @@ void UIPGCharacterComponent::CheckDefaultInitialization()
 	ContinueInitStateChain(StateChain);
 }
 
+void UIPGCharacterComponent::OnRegister()
+{
+	Super::OnRegister();
+
+	if (!GetPawn<APawn>())
+	{
+		UE_LOG(LogTemp, Error, TEXT("[UIPGCharacterComponent::OnRegister] This component has been added to a blueprint whose base class is not a Pawn. To use this component, it MUST be placed on a Pawn Blueprint."));
+	}
+	else
+	{
+		// Register with the init state system early, this will only work if this is a game world
+		RegisterInitStateFeature();
+	}
+}
+
+void UIPGCharacterComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Listen for when the pawn extension component changes init state
+	BindOnActorInitStateChanged(UIPGPlayerExtensionComponent::NAME_ActorFeatureName, FGameplayTag(), false);
+
+	// Notifies that we are done spawning, then try the rest of initialization
+	ensure(TryToChangeInitState(IPGGameplayTags::InitState_Spawned));
+	CheckDefaultInitialization();
+}
+
+void UIPGCharacterComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	UnregisterInitStateFeature();
+
+	Super::EndPlay(EndPlayReason);
+}
+
 void UIPGCharacterComponent::InitializePlayerInput(UInputComponent* PlayerInputComponent)
 {
 	check(PlayerInputComponent); 
@@ -183,7 +278,7 @@ void UIPGCharacterComponent::InitializePlayerInput(UInputComponent* PlayerInputC
 	UEnhancedInputLocalPlayerSubsystem* EnhancedInputLocalPlayerSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	check(EnhancedInputLocalPlayerSubsystem);
 
-	EnhancedInputLocalPlayerSubsystem->ClearAllMappings();
+	// EnhancedInputLocalPlayerSubsystem->ClearAllMappings();
 
 
 	// Get default input mappings from character data's input config
@@ -216,6 +311,9 @@ void UIPGCharacterComponent::InitializePlayerInput(UInputComponent* PlayerInputC
 				UIPGInputComponent* IPGInputComponent = Cast<UIPGInputComponent>(PlayerInputComponent);
 				if (ensure(IPGInputComponent))
 				{
+					// Add the key mappings that may have been set by the player
+					IPGInputComponent->AddInputMappings(InputConfig, EnhancedInputLocalPlayerSubsystem); 
+
 					// This is where we actually bind and input action to a gameplay tag, which means that Gameplay Ability Blueprints will
 					// be triggered directly by these input actions Triggered events. 
 					TArray<uint32> BindHandles;
@@ -225,24 +323,18 @@ void UIPGCharacterComponent::InitializePlayerInput(UInputComponent* PlayerInputC
 						&UIPGCharacterComponent::AbilityInputTagPressed, 
 						&UIPGCharacterComponent::AbilityInputTagReleased,
 						/*out*/ BindHandles);
-
-					IPGInputComponent->BindNativeAction(
-						InputConfig, 
-						IPGGameplayTags::InputTag_Move, 
-						ETriggerEvent::Triggered, 
-						this, 
-						&UIPGCharacterComponent::Input_Move);
-
-					IPGInputComponent->BindNativeAction(
-						InputConfig, 
-						IPGGameplayTags::InputTag_Look, 
-						ETriggerEvent::Triggered, 
-						this, 
-						&UIPGCharacterComponent::Input_Look);
 				}
 			}
 		}
 	}
+
+	if (!bReadyToBindInputs)
+	{
+		bReadyToBindInputs = true;
+	}
+
+	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APlayerController*>(PlayerController), NAME_BindInputsNow);
+	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APawn*>(Pawn), NAME_BindInputsNow);
 }
 
 void UIPGCharacterComponent::AbilityInputTagPressed(FGameplayTag InputTag)
@@ -273,48 +365,44 @@ void UIPGCharacterComponent::AbilityInputTagReleased(FGameplayTag InputTag)
 	}
 }
 
-void UIPGCharacterComponent::Input_Move(const FInputActionValue& InputActionValue)
+void UIPGCharacterComponent::Input_ToggleInventory(const FInputActionValue& InputActionValue)
 {
-	APawn* Pawn = GetPawn<APawn>();
-	AController* Controller = Pawn ? Pawn->GetController() : nullptr;
-
-	if (Controller)
-	{
-		const FVector2D Value = InputActionValue.Get<FVector2D>();
-		const FRotator MovementRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
-
-		if (Value.X != 0.0f)
-		{
-			const FVector MovementDirection = MovementRotation.RotateVector(FVector::RightVector);
-			Pawn->AddMovementInput(MovementDirection, Value.X);
-		}
-
-		if (Value.Y != 0.0f)
-		{
-			const FVector MovementDirection = MovementRotation.RotateVector(FVector::ForwardVector);
-			Pawn->AddMovementInput(MovementDirection, Value.Y);
-		}
-	}
-}
-
-void UIPGCharacterComponent::Input_Look(const FInputActionValue& InputActionValue)
-{
-	APawn* Pawn = GetPawn<APawn>();
-
-	if (!Pawn)
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	if (!IsValid(Pawn))
 	{
 		return;
 	}
 
-	const FVector2D Value = InputActionValue.Get<FVector2D>();
-
-	if (Value.X != 0.0f)
+	APlayerController* PC = Pawn->GetController<APlayerController>();
+	if (!IsValid(PC))
 	{
-		Pawn->AddControllerYawInput(Value.X);
+		return;
 	}
 
-	if (Value.Y != 0.0f)
+	UItemTraceComponent* ItemTraceComponent = PC->FindComponentByClass<UItemTraceComponent>();
+	if (ItemTraceComponent)
 	{
-		Pawn->AddControllerPitchInput(Value.Y);
+		ItemTraceComponent->ToggleInventory();
+	}
+}
+
+void UIPGCharacterComponent::Input_PickUp(const FInputActionValue& InputActionValue)
+{
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	if (!IsValid(Pawn))
+	{
+		return;
+	}
+
+	APlayerController* PC = Pawn->GetController<APlayerController>();
+	if (!IsValid(PC))
+	{
+		return;
+	}
+
+	UItemTraceComponent* ItemTraceComponent = PC->FindComponentByClass<UItemTraceComponent>();
+	if (ItemTraceComponent)
+	{
+		ItemTraceComponent->PrimaryInteract();
 	}
 }

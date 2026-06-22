@@ -4,14 +4,18 @@
 #include "Game/IPGGameState.h"
 #include "Game/Experience/IPGExperienceManagerComponent.h"
 #include "Game/Experience/IPGExperienceDefinition.h"
+#include "UI/IPGHUD.h"
 #include "Player/IPGPlayerState.h"
 #include "Player/IPGCharacterData.h"
 #include "System/IPGAssetManager.h"
+#include "System/IPGWorldSettings.h"
+#include "Player/IPGPlayerExtensionComponent.h"
 
 AIPGGameMode::AIPGGameMode()
 {
 	GameStateClass = AIPGGameState::StaticClass();
 	PlayerStateClass = AIPGPlayerState::StaticClass();
+	HUDClass = AIPGHUD::StaticClass();
 }
 
 void AIPGGameMode::InitGameState()
@@ -55,6 +59,34 @@ UClass* AIPGGameMode::GetDefaultPawnClassForController_Implementation(AControlle
 	}
 
 	return Super::GetDefaultPawnClassForController_Implementation(InController);
+}
+
+APawn* AIPGGameMode::SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform)
+{
+	FActorSpawnParameters SpawnInfo;
+	SpawnInfo.Instigator = GetInstigator();
+	SpawnInfo.ObjectFlags |= RF_Transient;	// Never save the default player pawns into a map.
+	SpawnInfo.bDeferConstruction = true;
+
+	if (UClass* PawnClass = GetDefaultPawnClassForController(NewPlayer))
+	{
+		if (APawn* SpawnedPawn = GetWorld()->SpawnActor<APawn>(PawnClass, SpawnTransform, SpawnInfo))
+		{
+			if (UIPGPlayerExtensionComponent* PlayerExtensionComponent = SpawnedPawn->FindComponentByClass<UIPGPlayerExtensionComponent>())
+			{
+				if (const UIPGCharacterData* CharacterData = GetCharacterDataForController(NewPlayer))
+				{
+					PlayerExtensionComponent->SetCharacterData(CharacterData);
+				}
+			}
+
+			SpawnedPawn->FinishSpawning(SpawnTransform);
+
+			return SpawnedPawn;
+		}
+	}
+
+	return nullptr;
 }
 
 const UIPGCharacterData* AIPGGameMode::GetCharacterDataForController(const AController* InController) const
@@ -101,6 +133,16 @@ void AIPGGameMode::AssignDefaultExperience()
 {
 	FPrimaryAssetId ExperienceId;
 	FString ExperienceIdSource;
+
+	// See if the world settings has a default experience
+	if (!ExperienceId.IsValid())
+	{
+		if (AIPGWorldSettings* TypedWorldSettings = Cast<AIPGWorldSettings>(GetWorldSettings()))
+		{
+			ExperienceId = TypedWorldSettings->GetDefaultGameplayExperience();
+			ExperienceIdSource = TEXT("WorldSettings");
+		}
+	}
 
 	// Final fallback to the default experience
 	if (!ExperienceId.IsValid())

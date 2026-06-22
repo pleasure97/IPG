@@ -4,20 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "AbilitySystemInterface.h"
 #include "IPGPlayerState.generated.h"
 
 class UIPGExperienceDefinition;
 class UIPGCharacterData;
+class UAbilitySystemComponent;
+class UIPGAbilitySystemComponent;
 
 /**
  * 
  */
 UCLASS()
-class IPG_API AIPGPlayerState : public APlayerState
+class IPG_API AIPGPlayerState : public APlayerState, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 	
 public:
+	AIPGPlayerState();
+
 	/* AActor Interface */
 	virtual void PostInitializeComponents() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -26,6 +31,10 @@ public:
 	/* Character Data */
 	const UIPGCharacterData* GetCharacterData() const { return CharacterData; }
 	void SetCharacterData(const UIPGCharacterData* InCharacterData);
+
+	/* Ability System Component */
+	UIPGAbilitySystemComponent* GetIPGAbilitySystemComponent() const { return AbilitySystemComponent; }
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterData)
@@ -36,4 +45,7 @@ protected:
 	
 private:
 	void OnExperienceLoaded(const UIPGExperienceDefinition* CurrentExperience);
+
+	UPROPERTY()
+	TObjectPtr<UIPGAbilitySystemComponent> AbilitySystemComponent;
 };

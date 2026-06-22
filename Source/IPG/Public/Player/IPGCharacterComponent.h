@@ -10,6 +10,7 @@
 struct FPriorityInputMappingContext;
 struct FGameplayTag;
 struct FInputActionValue;
+class UIPGInputConfig;
 
 /**
  * Component that sets up input and camera handling for player controlled characters
@@ -29,6 +30,15 @@ public:
 	// The name of the extension event sent via UGameFrameworkComponentManager when ability inputs are ready to bind */
 	static const FName NAME_BindInputsNow;
 
+	// True if this is controlled by a real player and has progressed far enough in initialization where additional input bindings can be added
+	bool IsReadyToBindInputs() const;
+
+	// Adds mode-specific input config
+	void AddAdditionalInputConfig(const UIPGInputConfig* InputConfig);
+
+	// Removes a mode-specific input config if it has been added
+	void RemoveAdditionalInputConfig(const UIPGInputConfig* InputConfig);
+
 	/* IGameFrameworkInitStateInterface interface */
 	virtual FName GetFeatureName() const override;
 	virtual bool CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState, FGameplayTag DesiredState) const override;
@@ -37,12 +47,17 @@ public:
 	virtual void CheckDefaultInitialization() override;
 
 protected:
+	/* Actor Component */
+	virtual void OnRegister() override;
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	/* Input */
 	virtual void InitializePlayerInput(UInputComponent* PlayerInputComponent);
 	void AbilityInputTagPressed(FGameplayTag InputTag);
 	void AbilityInputTagReleased(FGameplayTag InputTag);
-	void Input_Move(const FInputActionValue& InputActionValue);
-	void Input_Look(const FInputActionValue& InputActionValue);
+	void Input_ToggleInventory(const FInputActionValue& InputActionValue);
+	void Input_PickUp(const FInputActionValue& InputActionValue);
 
 	UPROPERTY(EditAnywhere)
 	TArray<FPriorityInputMappingContext> DefaultInputMappings;

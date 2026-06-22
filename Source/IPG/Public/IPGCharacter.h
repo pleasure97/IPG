@@ -5,12 +5,17 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "AbilitySystemInterface.h"
+#include "Guild/GuildTask.h"
+#include "Guild/GuildResource.h"
 #include "IPGCharacter.generated.h"
 
 class USpringArmComponent;
-class UCameraComponent;
+class UIPGCameraComponent;
 class UInputAction;
 struct FInputActionValue;
+class UAbilitySystemComponent;
+class UIPGPlayerExtensionComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -19,7 +24,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
  *  Implements a controllable orbiting camera
  */
 UCLASS(abstract)
-class AIPGCharacter : public ACharacter
+class AIPGCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -29,7 +34,7 @@ class AIPGCharacter : public ACharacter
 
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FollowCamera;
+	UIPGCameraComponent* FollowCamera;
 	
 protected:
 
@@ -54,6 +59,14 @@ public:
 	/** Constructor */
 	AIPGCharacter();	
 
+	UFUNCTION(BlueprintCallable, Category = "Guild")
+	void TriggerGuildExclusiveTask();
+
+private:
+	FGuildMasterResource MasterResource;
+	FGuildMemberResource MemberResource;
+	FGuildResource       GuildResource;
+
 protected:
 
 	/** Initialize input action bindings */
@@ -66,6 +79,9 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	virtual void OnAbilitySystemInitialized();
+	virtual void OnAbilitySystemUninitialized();
 
 public:
 
@@ -91,6 +107,17 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
 	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE class UIPGCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	/* Implement IAbilitySystemInterface*/
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IPG|Character", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UIPGPlayerExtensionComponent> PlayerExtensionComponent;
+
+	/** Ability System Component */
+	UPROPERTY()
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 };
 
