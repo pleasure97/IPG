@@ -29,4 +29,7 @@ class UIPGStateTreeBPLibrary : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Execute Sample function", Keywords = "IPGStateTree sample test testing"), Category = "IPGStateTreeTesting")
 	static float IPGStateTreeSampleFunction(float Param);
+
+	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Execute Sample function", Keywords = "IPGStateTree sample test testing"), Category = "IPGStateTreeTesting")
+	static void CallStateTreeTask();
 };

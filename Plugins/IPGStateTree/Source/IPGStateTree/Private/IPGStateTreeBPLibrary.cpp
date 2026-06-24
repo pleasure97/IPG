@@ -14,3 +14,7 @@ float UIPGStateTreeBPLibrary::IPGStateTreeSampleFunction(float Param)
 	return -1;
 }
 
+void UIPGStateTreeBPLibrary::CallStateTreeTask()
+{
+}
+
