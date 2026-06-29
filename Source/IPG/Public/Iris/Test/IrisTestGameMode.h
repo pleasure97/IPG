@@ -6,6 +6,8 @@
 #include "IPGGameMode.h"
 #include "IrisTestGameMode.generated.h"
 
+class UIPGFoVNetPrioritizerDataAsset;
+
 /**
  * 
  */
@@ -16,4 +18,26 @@ class IPG_API AIrisTestGameMode : public AIPGGameMode
 	
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void StartPlay() override;
+	virtual void BeginPlay() override;
+
+	/* Network Prioritizer Data Asset */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Iris|Presets")
+	TArray<TObjectPtr<UIPGFoVNetPrioritizerDataAsset>> FoVPrioritizerPresets;
+
+private:
+	/* Number of Players */
+	UPROPERTY(EditAnywhere)
+	int32 MaxPlayers = 100; 
+
+	UPROPERTY(EditAnywhere)
+	int32 RequiredPlayersToStart = 80;
+
+	FTimerHandle InsightsTimerHandle;
+	
+	bool bGameStarted = false;
+
+	void TriggerGameStart(); 
+
+	void StopProfilingAndShutdown();
 };

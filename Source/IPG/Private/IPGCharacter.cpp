@@ -13,6 +13,11 @@
 #include "IPG.h"
 #include "AbilitySystemComponent.h"
 #include "Player/IPGPlayerExtensionComponent.h"
+#if UE_WITH_IRIS
+#include "Net/Iris/ReplicationSystem/ReplicationSystemUtil.h"   
+#include "Net/Iris/ReplicationSystem/EngineReplicationBridge.h"   
+#include "Iris/ReplicationSystem/ReplicationSystem.h"           
+#endif
 
 AIPGCharacter::AIPGCharacter()
 {
@@ -92,6 +97,35 @@ void AIPGCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	}
 
 	PlayerExtensionComponent->SetupPlayerInputComponent();
+}
+
+void AIPGCharacter::BeginPlay()
+{
+	Super::BeginPlay(); 
+
+#if UE_WITH_IRIS
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	UReplicationSystem* ReplicationSystem = UE::Net::FReplicationSystemUtil::GetReplicationSystem(this);
+	UEngineReplicationBridge* ReplicationBridge = UE::Net::FReplicationSystemUtil::GetActorReplicationBridge(this);
+
+	if (!ReplicationSystem || !ReplicationBridge)
+	{
+		return;
+	}
+
+	UE::Net::FNetRefHandle Handle = ReplicationBridge->GetReplicatedRefHandle(this);
+
+	UE::Net::FNetObjectPrioritizerHandle PrioritizerHandle = ReplicationSystem->GetPrioritizerHandle(FName("FoVPrioritizer"));
+
+	if (!ReplicationSystem->SetPrioritizer(Handle, PrioritizerHandle))
+	{
+		ReplicationSystem->SetStaticPriority(Handle, 1.0f);
+	}
+#endif
 }
 
 void AIPGCharacter::Move(const FInputActionValue& Value)
