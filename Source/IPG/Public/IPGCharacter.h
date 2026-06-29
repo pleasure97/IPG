@@ -6,8 +6,6 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "AbilitySystemInterface.h"
-#include "Guild/GuildTask.h"
-#include "Guild/GuildResource.h"
 #include "IPGCharacter.generated.h"
 
 class USpringArmComponent;
@@ -55,17 +53,8 @@ protected:
 	UInputAction* MouseLookAction;
 
 public:
-
 	/** Constructor */
 	AIPGCharacter();	
-
-	UFUNCTION(BlueprintCallable, Category = "Guild")
-	void TriggerGuildExclusiveTask();
-
-private:
-	FGuildMasterResource MasterResource;
-	FGuildMemberResource MemberResource;
-	FGuildResource       GuildResource;
 
 protected:
 
