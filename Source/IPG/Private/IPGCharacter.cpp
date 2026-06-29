@@ -64,17 +64,6 @@ AIPGCharacter::AIPGCharacter()
 
 }
 
-void AIPGCharacter::TriggerGuildExclusiveTask()
-{
-	UE_LOG(LogTemp, Log, TEXT("[Guild] TriggerGuildExclusiveTask called"));
-
-	GuildExclusiveTask(
-		&MasterResource,
-		&GuildResource,
-		&MemberResource
-	);
-}
-
 void AIPGCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
