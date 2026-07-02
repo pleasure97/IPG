@@ -19,7 +19,8 @@
 				"EnhancedInput",
 				"IrisCore",
 				"ModularGameplay",
-				"GameplayAbilities"
+				"GameplayAbilities",
+				"AnimGraph"
 			]
 		}
 	],

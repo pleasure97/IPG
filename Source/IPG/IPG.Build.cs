@@ -23,7 +23,8 @@ public class IPG : ModuleRules
 			"NetCore",
             "GameplayTags",
             "GameplayTasks",
-            "GameplayAbilities",
+            "GameplayAbilities",            
+			"AnimGraphRuntime",
             "ModularGameplay",
 			"IPGTaskSystem", 
 			"IPGInventory"
