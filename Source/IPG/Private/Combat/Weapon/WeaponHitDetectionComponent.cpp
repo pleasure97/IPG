@@ -9,6 +9,16 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Engine/StaticMeshSocket.h"
 
+namespace WeaponHitDetectionAssetPaths
+{
+	const FSoftObjectPath Triangle = FSoftObjectPath(
+		TEXT("/Game/Data/Weapon/HitDetection/DA_WeaponTriangleIntersection.DA_WeaponTriangleIntersection"));
+	const FSoftObjectPath Sweep = FSoftObjectPath(
+		TEXT("/Game/Data/Weapon/HitDetection/DA_WeaponSweepTrace.DA_WeaponSweepTrace"));
+	const FSoftObjectPath RawAnim = FSoftObjectPath(
+		TEXT("/Game/Data/Weapon/HitDetection/DA_WeaponRawAnimationData.DA_WeaponRawAnimationData"));
+}
+
 UWeaponHitDetectionComponent::UWeaponHitDetectionComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -17,6 +27,8 @@ UWeaponHitDetectionComponent::UWeaponHitDetectionComponent()
 void UWeaponHitDetectionComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	PreloadAllHitDetectionData();
 
 	// Get owner and cast it to weapon interface
 	AActor* OwnerWeapon = GetOwner();
@@ -96,8 +108,22 @@ void UWeaponHitDetectionComponent::SetCollisionEnabled(bool bEnabled)
 	}
 }
 
+void UWeaponHitDetectionComponent::SwitchDetectionMethod(EHitDetectionMethod NewMethod)
+{
+	if (UWeaponHitDetectionDataAsset** FoundHitDetectionData = PreloadedDataAssets.Find(NewMethod))
+	{
+		HitDetectionData = *FoundHitDetectionData;
+
+		// Reset previous position upon activation
+		bWeaponInitialized = false;
+		PrevSocketLocations.Reset();
+	}
+}
+
 void UWeaponHitDetectionComponent::PerformSweepDetection()
 {
+	SCOPE_CYCLE_COUNTER(STAT_SweepDetection);
+
 	// Get weapon collision component 
 	if (!OwnerWeaponCollision.IsValid() || !OwnerWeaponCollision->IsCollisionEnabled())
 	{
@@ -151,6 +177,8 @@ void UWeaponHitDetectionComponent::PerformSweepDetection()
 
 void UWeaponHitDetectionComponent::PerformTriangleDetection()
 {
+	SCOPE_CYCLE_COUNTER(STAT_TriangleDetection);
+
 	if (!OwnerWeaponMesh.IsValid() || !HitDetectionData)
 	{
 		return;
@@ -257,6 +285,8 @@ void UWeaponHitDetectionComponent::PerformTriangleDetection()
 
 void UWeaponHitDetectionComponent::PerformRawAnimDataDetection(float DeltaTime)
 {
+	SCOPE_CYCLE_COUNTER(STAT_RawAnimDataDetection);
+
 	if (!OwnerWeaponMesh.IsValid() || !HitDetectionData)
 	{
 		return;
@@ -335,8 +365,40 @@ void UWeaponHitDetectionComponent::PerformRawAnimDataDetection(float DeltaTime)
 	PrevSocketLocations.Add(TEXT("Root"), SubStepRoots.Last());
 }
 
+void UWeaponHitDetectionComponent::PreloadAllHitDetectionData()
+{
+	FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+
+	TArray<FSoftObjectPath> PathsToLoad = {
+		WeaponHitDetectionAssetPaths::Triangle,
+		WeaponHitDetectionAssetPaths::Sweep,
+		WeaponHitDetectionAssetPaths::RawAnim,
+	};
+
+	StreamableManager.RequestAsyncLoad(PathsToLoad, FStreamableDelegate::CreateLambda([this]()
+		{
+			// Save to preloaded data assets map after loading is complete
+			auto LoadAsset = [](const FSoftObjectPath& Path) -> UWeaponHitDetectionDataAsset*
+				{
+					return Cast<UWeaponHitDetectionDataAsset>(Path.ResolveObject());
+				};
+
+			PreloadedDataAssets.Add(
+				EHitDetectionMethod::TriangleIntersection,
+				LoadAsset(WeaponHitDetectionAssetPaths::Triangle));
+			PreloadedDataAssets.Add(
+				EHitDetectionMethod::SweepTrace,
+				LoadAsset(WeaponHitDetectionAssetPaths::Sweep));
+			PreloadedDataAssets.Add(
+				EHitDetectionMethod::RawAnimationData,
+				LoadAsset(WeaponHitDetectionAssetPaths::RawAnim));
+		}));
+}
+
 TArray<FVector> UWeaponHitDetectionComponent::GetPositionFromRawAnimData(FName SocketName, float DeltaTime)
 {
+	SCOPE_CYCLE_COUNTER(STAT_GetPositionFromRawAnimData);
+
 	// Check if character anim instance and weapon mesh are valid
 	if (!OwnerCharacterSkeletalMesh.IsValid() || !OwnerCharacterAnimInstance.IsValid() || !OwnerWeaponMesh.IsValid())
 	{

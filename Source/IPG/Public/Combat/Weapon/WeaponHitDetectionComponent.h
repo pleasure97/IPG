@@ -7,6 +7,13 @@
 #include "Combat/Weapon/WeaponHitDetectionDataAsset.h"
 #include "WeaponHitDetectionComponent.generated.h"
 
+DECLARE_STATS_GROUP(TEXT("WeaponHitDetection"), STATGROUP_WeaponHitDetection, STATCAT_Advanced);
+
+DECLARE_CYCLE_STAT(TEXT("TriangleDetection"), STAT_TriangleDetection, STATGROUP_WeaponHitDetection);
+DECLARE_CYCLE_STAT(TEXT("SweepDetection"), STAT_SweepDetection, STATGROUP_WeaponHitDetection);
+DECLARE_CYCLE_STAT(TEXT("RawAnimDataDetection"), STAT_RawAnimDataDetection, STATGROUP_WeaponHitDetection);
+DECLARE_CYCLE_STAT(TEXT("GetPositionFromRawAnimData"), STAT_GetPositionFromRawAnimData, STATGROUP_WeaponHitDetection);
+
 class AIPGWeapon;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -20,6 +27,9 @@ public:
 	// Would be called by anim notify state
 	UFUNCTION(BlueprintCallable)
 	void SetCollisionEnabled(bool bEnabled);
+
+	UFUNCTION(BlueprintCallable)
+	void SwitchDetectionMethod(EHitDetectionMethod NewMethod);
 
 protected:
 	virtual void BeginPlay() override;
@@ -36,6 +46,8 @@ private:
 	void PerformSweepDetection();
 	void PerformTriangleDetection();
 	void PerformRawAnimDataDetection(float DeltaTime);
+
+	void PreloadAllHitDetectionData();
 
 	TArray<FVector> GetPositionFromRawAnimData(FName SocketName, float DeltaTime);
 
