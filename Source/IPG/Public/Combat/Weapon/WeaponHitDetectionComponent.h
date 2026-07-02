@@ -34,7 +34,11 @@ protected:
 
 private:
 	void PerformSweepDetection();
-		
+	void PerformTriangleDetection();
+	void PerformRawAnimDataDetection(float DeltaTime);
+
+	TArray<FVector> GetPositionFromRawAnimData(FName SocketName, float DeltaTime);
+
 	UPROPERTY()
 	TMap<EHitDetectionMethod, UWeaponHitDetectionDataAsset*> PreloadedDataAssets;
 
