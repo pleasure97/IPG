@@ -40,7 +40,7 @@ void UInventoryGridWidget::ShowCursor()
 		return;
 	}
 
-	GetOwningPlayer()->SetMouseCursorWidget(EMouseCursor::Default, GetVisibleCursorWidget()); 
+	GetOwningPlayer()->SetShowMouseCursor(true);
 }
 
 void UInventoryGridWidget::HideCursor()
@@ -50,7 +50,7 @@ void UInventoryGridWidget::HideCursor()
 		return;
 	}
 
-	GetOwningPlayer()->SetMouseCursorWidget(EMouseCursor::Default, GetHiddenCursorWidget());
+	GetOwningPlayer()->SetShowMouseCursor(false);
 }
 
 void UInventoryGridWidget::OnHide()
@@ -389,6 +389,10 @@ void UInventoryGridWidget::AddItemAtIndex(UInventoryItem* Item, const int32 Inde
 	const int32 StackUpdateAmount = bIsStackable ? StackAmount : 0; 
 	SlotItem->UpdateStackCount(StackUpdateAmount); 
 	SlotItem->OnSlotItemClicked.AddDynamic(this, &UInventoryGridWidget::OnSlotItemClicked);
+
+	AddSlotItemToCanvas(Index, GridFragment, SlotItem);
+
+	SlotItems.Add(Index, SlotItem);
 }
 
 void UInventoryGridWidget::AddItemToIndices(const FSlotAvailabilityResult& Result, UInventoryItem* NewItem)
@@ -474,7 +478,7 @@ void UInventoryGridWidget::UpdateGridSlots(UInventoryItem* NewItem, const int32 
 			{
 				GridSlot->SetInventoryItem(NewItem); 
 				GridSlot->SetUpperLeftIndex(Index); 
-				GridSlot->SetUnoccupiedTexture(); 
+				GridSlot->SetOccupiedTexture(); 
 				GridSlot->SetAvailable(false);
 			}
 		});
@@ -1095,33 +1099,6 @@ bool UInventoryGridWidget::CursorExitedCanvas(const FVector2D& BoundaryPosition,
 	return false;
 }
 
-UCommonUserWidget* UInventoryGridWidget::GetVisibleCursorWidget()
-{
-	if (!IsValid(GetOwningPlayer()))
-	{
-		return nullptr;
-	}
-
-	if (!IsValid(VisibleCursorWidget))
-	{
-		VisibleCursorWidget = CreateWidget<UCommonUserWidget>(GetOwningPlayer(), VisibleCursorWidgetClass);
-	}
-	return VisibleCursorWidget;
-}
-
-UCommonUserWidget* UInventoryGridWidget::GetHiddenCursorWidget()
-{
-	if (!IsValid(GetOwningPlayer()))
-	{
-		return nullptr;
-	}
-
-	if (!IsValid(HiddenCursorWidget))
-	{
-		HiddenCursorWidget = CreateWidget<UCommonUserWidget>(GetOwningPlayer(), HiddenCursorWidgetClass);
-	}
-	return HiddenCursorWidget;
-}
 
 /*----------------------------------------------------- Pop Up ----------------------------------------------------- */
 void UInventoryGridWidget::CreateItemPopUp(const int32 GridIndex)

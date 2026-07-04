@@ -17,10 +17,8 @@ class IPGINVENTORY_API UInventoryHUDWidget : public UCommonActivatableWidget
 	GENERATED_BODY()
 	
 public:
-	UFUNCTION(BlueprintImplementableEvent, Category = "Inventory")
 	void ShowPickupMessage(const FString& Message);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Inventory")
 	void HidePickupMessage();
 
 protected:

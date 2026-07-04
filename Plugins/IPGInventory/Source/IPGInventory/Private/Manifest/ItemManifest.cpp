@@ -41,12 +41,12 @@ void FItemManifest::AssimilateInventoryFragments(UCompositeBaseWidget* Composite
 
 void FItemManifest::SpawnPickupActor(const UObject* WorldContextObject, const FVector& SpawnLocation, const FRotator& SpawnRotation)
 {
-	if (!IsValid(PickupActorClass) || !IsValid(WorldContextObject))
+	if (!IsValid(SpawnItemClass) || !IsValid(WorldContextObject))
 	{
 		return;
 	}
 
-	AActor* SpawnedActor = WorldContextObject->GetWorld()->SpawnActor<AActor>(PickupActorClass, SpawnLocation, SpawnRotation); 
+	AActor* SpawnedActor = WorldContextObject->GetWorld()->SpawnActor<AActor>(SpawnItemClass, SpawnLocation, SpawnRotation); 
 	if (!IsValid(SpawnedActor))
 	{
 		return;

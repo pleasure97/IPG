@@ -22,7 +22,7 @@ void UItemTraceComponent::ToggleInventory()
 		return;
 	}
 
-	InventoryComponent->ToggleInventoryMenu(InventoryComponent->IsMenuOpen());
+	InventoryComponent->ToggleInventoryMenu(!InventoryComponent->IsMenuOpen());
 	if (InventoryComponent->IsMenuOpen())
 	{
 		HUDWidget->SetVisibility(ESlateVisibility::Hidden);

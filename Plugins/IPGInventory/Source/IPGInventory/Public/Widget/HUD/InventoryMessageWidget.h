@@ -17,10 +17,8 @@ class IPGINVENTORY_API UInventoryMessageWidget : public UCommonUserWidget
 	GENERATED_BODY()
 	
 public:
-	UFUNCTION(BlueprintImplementableEvent, Category = "Inventory")
 	void ShowMessage();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Inventory")
 	void HideMessage();
 
 	void SetMessage(const FText& Message);

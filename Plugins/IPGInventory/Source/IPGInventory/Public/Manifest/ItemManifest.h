@@ -58,7 +58,7 @@ private:
 	FGameplayTag ItemType;
 
 	UPROPERTY(EditAnywhere, Category = "Inventory")
-	TSubclassOf<AActor> PickupActorClass;
+	TSubclassOf<AActor> SpawnItemClass;
 };
 
 template<typename T> requires std::derived_from<T, FItemFragment>

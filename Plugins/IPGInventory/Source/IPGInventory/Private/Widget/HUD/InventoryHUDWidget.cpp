@@ -18,6 +18,18 @@ void UInventoryHUDWidget::NativeOnInitialized()
 	}
 }
 
+void UInventoryHUDWidget::ShowPickupMessage(const FString& Message)
+{
+	InfoMessage->SetMessage(FText::FromString(Message));
+	InfoMessage->ShowMessage();
+}
+
+void UInventoryHUDWidget::HidePickupMessage()
+{
+	InfoMessage->SetMessage(FText::FromString(FString("")));
+	InfoMessage->HideMessage();
+}
+
 void UInventoryHUDWidget::OnNoRoom()
 {
 	if (!IsValid(InfoMessage))

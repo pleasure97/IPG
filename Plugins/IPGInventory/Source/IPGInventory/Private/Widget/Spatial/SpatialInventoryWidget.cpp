@@ -50,8 +50,10 @@ void USpatialInventoryWidget::OnItemHovered(UInventoryItem* Item)
 	UItemDescriptionWidget* ItemDescriptionWidget = GetItemDescription();
 	if (!IsValid(ItemDescriptionWidget))
 	{
-		ItemDescriptionWidget->SetVisibility(ESlateVisibility::Collapsed);
+		return;
 	}
+
+	ItemDescriptionWidget->SetVisibility(ESlateVisibility::Collapsed);
 
 	GetOwningPlayer()->GetWorldTimerManager().ClearTimer(DescriptionTimer); 
 	GetOwningPlayer()->GetWorldTimerManager().ClearTimer(EquipmentDescriptionTimer); 

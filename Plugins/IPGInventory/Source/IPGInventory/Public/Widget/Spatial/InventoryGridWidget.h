@@ -173,20 +173,6 @@ private:
 
 	/* Cursor */
 	bool CursorExitedCanvas(const FVector2D& BoundaryPosition, const FVector2D& BoundarySize, const FVector2D& Location); 
-	UCommonUserWidget* GetVisibleCursorWidget(); 
-	UCommonUserWidget* GetHiddenCursorWidget(); 
-
-	UPROPERTY(EditAnywhere, Category = "Inventory")
-	TSubclassOf<UCommonUserWidget> VisibleCursorWidgetClass; 
-
-	UPROPERTY(EditAnywhere, Category = "Inventory")
-	TSubclassOf<UCommonUserWidget> HiddenCursorWidgetClass;
-
-	UPROPERTY()
-	TObjectPtr<UCommonUserWidget> VisibleCursorWidget;
-
-	UPROPERTY()
-	TObjectPtr<UCommonUserWidget> HiddenCursorWidget;
 
 	/* Pop Up */
 	void CreateItemPopUp(const int32 GridIndex);
