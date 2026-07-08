@@ -4,6 +4,7 @@
 #include "GameFeature/GameFeatureAction_AddAbility.h"
 #include "AbilitySystemComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
+#include "Player/IPGPlayerState.h"
 
 void UGameFeatureAction_AddAbility::OnGameFeatureActivating(FGameFeatureActivatingContext& Context)
 {
@@ -47,7 +48,10 @@ void UGameFeatureAction_AddAbility::AddToWorld(const FWorldContext& WorldContext
 					UGameFrameworkComponentManager::FExtensionHandlerDelegate AddAbilityDelegate =
 						UGameFrameworkComponentManager::FExtensionHandlerDelegate::CreateUObject(
 							this, &UGameFeatureAction_AddAbility::HandleActorExtension, EntryIndex, ChangeContext);
-
+					TSharedPtr<FComponentRequestHandle> ExtensionRequestHandle 
+						= GameFrameworkComponentManager->AddExtensionHandler(Entry.ActorClass, AddAbilityDelegate);
+					ActiveData.ComponentRequests.Add(ExtensionRequestHandle);
+					++EntryIndex;
 				}
 			}
 		}
@@ -64,7 +68,7 @@ void UGameFeatureAction_AddAbility::HandleActorExtension(AActor* Actor, FName Ev
 		{
 			RemoveActorAbilities(Actor, *ActiveData);
 		}
-		else if ((EventName == UGameFrameworkComponentManager::NAME_ExtensionAdded))
+		else if ((EventName == UGameFrameworkComponentManager::NAME_ExtensionAdded) || (EventName == AIPGPlayerState::NAME_AbilityReady))
 		{
 			AddActorAbilities(Actor, Entry, *ActiveData);
 		}
