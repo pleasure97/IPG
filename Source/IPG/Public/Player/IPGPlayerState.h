@@ -36,6 +36,8 @@ public:
 	UIPGAbilitySystemComponent* GetIPGAbilitySystemComponent() const { return AbilitySystemComponent; }
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	static const FName NAME_AbilityReady;
+
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterData)
 	TObjectPtr<const UIPGCharacterData> CharacterData;

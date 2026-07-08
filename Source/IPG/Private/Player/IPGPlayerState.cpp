@@ -9,6 +9,9 @@
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "Ability/IPGAbilitySystemComponent.h"
+#include "Components/GameFrameworkComponentManager.h"
+
+const FName AIPGPlayerState::NAME_AbilityReady("AbilityReady");
 
 AIPGPlayerState::AIPGPlayerState()
 {
@@ -66,6 +69,8 @@ void AIPGPlayerState::SetCharacterData(const UIPGCharacterData* InCharacterData)
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(AIPGPlayerState, CharacterData, this);
 	CharacterData = InCharacterData;
+
+	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(this, NAME_AbilityReady);
 
 	ForceNetUpdate();
 }

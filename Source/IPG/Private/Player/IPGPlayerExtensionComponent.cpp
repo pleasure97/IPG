@@ -7,6 +7,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Ability/IPGAbilitySystemComponent.h"
 #include "Player/IPGCharacterData.h"
+#include "GameFramework/Pawn.h"
 
 const FName UIPGPlayerExtensionComponent::NAME_ActorFeatureName("PlayerExtension");
 
@@ -149,6 +150,24 @@ void UIPGPlayerExtensionComponent::InitializeAbilitySystem(UIPGAbilitySystemComp
 	{
 		UninitializeAbilitySystem();
 	}
+
+	APawn* Pawn = CastChecked<APawn>(GetOwner()); 
+	AActor* ExistingAvatarActor = InAbilitySystemComponent->GetAvatarActor(); 
+
+	if ((ExistingAvatarActor != nullptr) && (ExistingAvatarActor != Pawn))
+	{
+		ensure(!ExistingAvatarActor->HasAuthority());
+		UIPGPlayerExtensionComponent* OtherExtensionComponent = ExistingAvatarActor->FindComponentByClass<UIPGPlayerExtensionComponent>();
+		if (IsValid(OtherExtensionComponent))
+		{
+			OtherExtensionComponent->UninitializeAbilitySystem();
+		}
+	}
+
+	AbilitySystemComponent = InAbilitySystemComponent;
+	AbilitySystemComponent->InitAbilityActorInfo(InOwnerActor, Pawn);
+
+	OnAbilitySystemInitialized.Broadcast();
 }
 
 void UIPGPlayerExtensionComponent::UninitializeAbilitySystem()
