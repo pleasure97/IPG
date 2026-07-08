@@ -15,6 +15,7 @@
 #include "Ability/IPGAbilitySystemComponent.h"
 #include "InputMappingContext.h"
 #include "GameFeature/GameFeatureAction_AddInputMappingContext.h"
+#include "Component/InventoryComponent.h"
 #include "Component/ItemTraceComponent.h"
 
 const FName UIPGCharacterComponent::NAME_ActorFeatureName("IPGCharacter");
@@ -67,14 +68,14 @@ void UIPGCharacterComponent::AddAdditionalInputConfig(const UIPGInputConfig* Inp
 			IPGInputComponent->BindNativeAction(
 				InputConfig,
 				IPGGameplayTags::InputTag_ToggleInventory,
-				ETriggerEvent::Triggered,
+				ETriggerEvent::Started,
 				this,
 				&UIPGCharacterComponent::Input_ToggleInventory);
 
 			IPGInputComponent->BindNativeAction(
 				InputConfig,
 				IPGGameplayTags::InputTag_PickUp,
-				ETriggerEvent::Triggered,
+				ETriggerEvent::Started,
 				this,
 				&UIPGCharacterComponent::Input_PickUp);
 		}
@@ -379,10 +380,10 @@ void UIPGCharacterComponent::Input_ToggleInventory(const FInputActionValue& Inpu
 		return;
 	}
 
-	UItemTraceComponent* ItemTraceComponent = PC->FindComponentByClass<UItemTraceComponent>();
-	if (ItemTraceComponent)
+	UInventoryComponent* InventoryComponent = PC->FindComponentByClass<UInventoryComponent>();
+	if (InventoryComponent)
 	{
-		ItemTraceComponent->ToggleInventory();
+		InventoryComponent->ToggleInventoryMenu(!InventoryComponent->IsMenuOpen()); 
 	}
 }
 

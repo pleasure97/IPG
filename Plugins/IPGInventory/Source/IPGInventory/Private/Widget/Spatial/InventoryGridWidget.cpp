@@ -35,22 +35,28 @@ float UInventoryGridWidget::GetTileSize() const
 /*----------------------------------------------------- Cursor ----------------------------------------------------- */
 void UInventoryGridWidget::ShowCursor()
 {
-	if (!IsValid(GetOwningPlayer()))
+	APlayerController* PC = GetOwningPlayer();
+	if (!IsValid(PC))
 	{
 		return;
 	}
 
-	GetOwningPlayer()->SetShowMouseCursor(true);
+	PC->SetMouseCursorWidget(EMouseCursor::Default, nullptr);
+	PC->CurrentMouseCursor = EMouseCursor::Default;
+	PC->SetShowMouseCursor(true);
 }
 
 void UInventoryGridWidget::HideCursor()
 {
-	if (!IsValid(GetOwningPlayer()))
+	APlayerController* PC = GetOwningPlayer();
+	if (!IsValid(PC))
 	{
 		return;
 	}
 
-	GetOwningPlayer()->SetShowMouseCursor(false);
+	PC->SetMouseCursorWidget(EMouseCursor::Default, nullptr);
+	PC->CurrentMouseCursor = EMouseCursor::Default;
+	PC->SetShowMouseCursor(false);
 }
 
 void UInventoryGridWidget::OnHide()
@@ -665,18 +671,24 @@ void UInventoryGridWidget::ConsumeHoverItemStacks(const int32 ClickedStackCount,
 
 void UInventoryGridWidget::AddStacks(const FSlotAvailabilityResult& SlotAvailabilityResult)
 {
+	// Check item manifest's category matches inventory grid widget's category
 	if (!MatchesCategory(SlotAvailabilityResult.Item.Get()))
 	{
 		return;
 	}
 
+	// Iterate item slot availability array of item slot result 
 	for (const FSlotAvailability& SlotAvailability : SlotAvailabilityResult.SlotAvailabilities)
 	{
+		// If item already exists, add stacks
 		if (SlotAvailability.bItemAtIndex)
 		{
-			const auto& GridSlot = GridSlots[SlotAvailability.Index]; 
-			const auto& SlotItem = SlotItems.FindChecked(SlotAvailability.Index);
-			SlotItem->UpdateStackCount(GridSlot->GetStackCount() + SlotAvailability.AmountToFill); 
+			const TObjectPtr<UGridSlotWidget>& GridSlotWidget = GridSlots[SlotAvailability.Index];
+			const TObjectPtr<USlotItemWidget>& SlotItemWidget = SlotItems.FindChecked(SlotAvailability.Index);
+			// Update slot item widget's stack count
+			SlotItemWidget->UpdateStackCount(GridSlotWidget->GetStackCount() + SlotAvailability.AmountToFill);
+			// Update grid slot widget's stack count
+			GridSlotWidget->SetStackCount(GridSlotWidget->GetStackCount() + SlotAvailability.AmountToFill);
 		}
 		else
 		{
