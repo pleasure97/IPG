@@ -33,8 +33,8 @@ void UInventoryItem::SetItemManifest(const FItemManifest& Manifest)
 
 bool UInventoryItem::IsStackable() const
 {
-	const FStackableFragment* Stackable = GetItemManifest().GetFragmentOfType<FStackableFragment>();
-	return false;
+	const FStackableFragment* StackableFragment = GetItemManifest().GetFragmentOfType<FStackableFragment>();
+	return (StackableFragment != nullptr);
 }
 
 void UInventoryItem::SetTotalStackCount(int32 Count)

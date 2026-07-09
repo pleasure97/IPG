@@ -12,6 +12,16 @@ void UInventoryMessageWidget::NativeOnInitialized()
 	HideMessage();
 }
 
+void UInventoryMessageWidget::ShowMessage()
+{
+	TextBlock_Message->SetVisibility(ESlateVisibility::Visible);
+}
+
+void UInventoryMessageWidget::HideMessage()
+{
+	TextBlock_Message->SetVisibility(ESlateVisibility::Collapsed);
+}
+
 void UInventoryMessageWidget::SetMessage(const FText& Message)
 {
 	TextBlock_Message->SetText(Message); 

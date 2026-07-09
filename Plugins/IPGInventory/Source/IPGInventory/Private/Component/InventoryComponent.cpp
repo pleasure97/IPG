@@ -20,7 +20,6 @@ UInventoryComponent::UInventoryComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true); 
-	bReplicateUsingRegisteredSubObjectList = true;
 	bInventoryMenuOpen = false;
 }
 

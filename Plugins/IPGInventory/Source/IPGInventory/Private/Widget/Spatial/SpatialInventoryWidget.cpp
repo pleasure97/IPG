@@ -46,12 +46,14 @@ FSlotAvailabilityResult USpatialInventoryWidget::HasRoomForItem(UItemComponent* 
 
 void USpatialInventoryWidget::OnItemHovered(UInventoryItem* Item)
 {
-	const auto& Manifest = Item->GetItemManifest(); 
+	const FItemManifest& Manifest = Item->GetItemManifest(); 
 	UItemDescriptionWidget* ItemDescriptionWidget = GetItemDescription();
 	if (!IsValid(ItemDescriptionWidget))
 	{
-		ItemDescriptionWidget->SetVisibility(ESlateVisibility::Collapsed);
+		return;
 	}
+
+	ItemDescriptionWidget->SetVisibility(ESlateVisibility::Collapsed);
 
 	GetOwningPlayer()->GetWorldTimerManager().ClearTimer(DescriptionTimer); 
 	GetOwningPlayer()->GetWorldTimerManager().ClearTimer(EquipmentDescriptionTimer); 
@@ -68,6 +70,8 @@ void USpatialInventoryWidget::OnItemHovered(UInventoryItem* Item)
 			GetOwningPlayer()->GetWorldTimerManager().SetTimer(
 				EquipmentDescriptionTimer, EquipmentDescriptionTimerDelegate, EquipmentDescriptionTimerDelay, false); 
 		});
+
+	GetOwningPlayer()->GetWorldTimerManager().SetTimer(DescriptionTimer, DescriptionTimerDelegate, DescriptionTimerDelay, false);
 }
 
 void USpatialInventoryWidget::OnItemUnhovered()
@@ -134,7 +138,7 @@ void USpatialInventoryWidget::NativeOnInitialized()
 	Grid_Consumable->SetOwningCanvas(CanvasPanel); 
 	Grid_Craftable->SetOwningCanvas(CanvasPanel); 
 
-	ShowEquipment(); 
+	ShowConsumable(); 
 
 	WidgetTree->ForEachWidget([this](UWidget* Widget)
 		{

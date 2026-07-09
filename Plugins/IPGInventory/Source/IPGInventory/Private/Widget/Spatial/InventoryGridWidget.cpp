@@ -35,22 +35,28 @@ float UInventoryGridWidget::GetTileSize() const
 /*----------------------------------------------------- Cursor ----------------------------------------------------- */
 void UInventoryGridWidget::ShowCursor()
 {
-	if (!IsValid(GetOwningPlayer()))
+	APlayerController* PC = GetOwningPlayer();
+	if (!IsValid(PC))
 	{
 		return;
 	}
 
-	GetOwningPlayer()->SetMouseCursorWidget(EMouseCursor::Default, GetVisibleCursorWidget()); 
+	PC->SetMouseCursorWidget(EMouseCursor::Default, nullptr);
+	PC->CurrentMouseCursor = EMouseCursor::Default;
+	PC->SetShowMouseCursor(true);
 }
 
 void UInventoryGridWidget::HideCursor()
 {
-	if (!IsValid(GetOwningPlayer()))
+	APlayerController* PC = GetOwningPlayer();
+	if (!IsValid(PC))
 	{
 		return;
 	}
 
-	GetOwningPlayer()->SetMouseCursorWidget(EMouseCursor::Default, GetHiddenCursorWidget());
+	PC->SetMouseCursorWidget(EMouseCursor::Default, nullptr);
+	PC->CurrentMouseCursor = EMouseCursor::Default;
+	PC->SetShowMouseCursor(false);
 }
 
 void UInventoryGridWidget::OnHide()
@@ -389,6 +395,10 @@ void UInventoryGridWidget::AddItemAtIndex(UInventoryItem* Item, const int32 Inde
 	const int32 StackUpdateAmount = bIsStackable ? StackAmount : 0; 
 	SlotItem->UpdateStackCount(StackUpdateAmount); 
 	SlotItem->OnSlotItemClicked.AddDynamic(this, &UInventoryGridWidget::OnSlotItemClicked);
+
+	AddSlotItemToCanvas(Index, GridFragment, SlotItem);
+
+	SlotItems.Add(Index, SlotItem);
 }
 
 void UInventoryGridWidget::AddItemToIndices(const FSlotAvailabilityResult& Result, UInventoryItem* NewItem)
@@ -474,7 +484,7 @@ void UInventoryGridWidget::UpdateGridSlots(UInventoryItem* NewItem, const int32 
 			{
 				GridSlot->SetInventoryItem(NewItem); 
 				GridSlot->SetUpperLeftIndex(Index); 
-				GridSlot->SetUnoccupiedTexture(); 
+				GridSlot->SetOccupiedTexture(); 
 				GridSlot->SetAvailable(false);
 			}
 		});
@@ -661,18 +671,24 @@ void UInventoryGridWidget::ConsumeHoverItemStacks(const int32 ClickedStackCount,
 
 void UInventoryGridWidget::AddStacks(const FSlotAvailabilityResult& SlotAvailabilityResult)
 {
+	// Check item manifest's category matches inventory grid widget's category
 	if (!MatchesCategory(SlotAvailabilityResult.Item.Get()))
 	{
 		return;
 	}
 
+	// Iterate item slot availability array of item slot result 
 	for (const FSlotAvailability& SlotAvailability : SlotAvailabilityResult.SlotAvailabilities)
 	{
+		// If item already exists, add stacks
 		if (SlotAvailability.bItemAtIndex)
 		{
-			const auto& GridSlot = GridSlots[SlotAvailability.Index]; 
-			const auto& SlotItem = SlotItems.FindChecked(SlotAvailability.Index);
-			SlotItem->UpdateStackCount(GridSlot->GetStackCount() + SlotAvailability.AmountToFill); 
+			const TObjectPtr<UGridSlotWidget>& GridSlotWidget = GridSlots[SlotAvailability.Index];
+			const TObjectPtr<USlotItemWidget>& SlotItemWidget = SlotItems.FindChecked(SlotAvailability.Index);
+			// Update slot item widget's stack count
+			SlotItemWidget->UpdateStackCount(GridSlotWidget->GetStackCount() + SlotAvailability.AmountToFill);
+			// Update grid slot widget's stack count
+			GridSlotWidget->SetStackCount(GridSlotWidget->GetStackCount() + SlotAvailability.AmountToFill);
 		}
 		else
 		{
@@ -1095,33 +1111,6 @@ bool UInventoryGridWidget::CursorExitedCanvas(const FVector2D& BoundaryPosition,
 	return false;
 }
 
-UCommonUserWidget* UInventoryGridWidget::GetVisibleCursorWidget()
-{
-	if (!IsValid(GetOwningPlayer()))
-	{
-		return nullptr;
-	}
-
-	if (!IsValid(VisibleCursorWidget))
-	{
-		VisibleCursorWidget = CreateWidget<UCommonUserWidget>(GetOwningPlayer(), VisibleCursorWidgetClass);
-	}
-	return VisibleCursorWidget;
-}
-
-UCommonUserWidget* UInventoryGridWidget::GetHiddenCursorWidget()
-{
-	if (!IsValid(GetOwningPlayer()))
-	{
-		return nullptr;
-	}
-
-	if (!IsValid(HiddenCursorWidget))
-	{
-		HiddenCursorWidget = CreateWidget<UCommonUserWidget>(GetOwningPlayer(), HiddenCursorWidgetClass);
-	}
-	return HiddenCursorWidget;
-}
 
 /*----------------------------------------------------- Pop Up ----------------------------------------------------- */
 void UInventoryGridWidget::CreateItemPopUp(const int32 GridIndex)
