@@ -2,6 +2,7 @@
 
 
 #include "Enemy/EnemyMassSubsystem.h"
+#include "Enemy/EnemyMassFragment.h"
 #include "System/MassEntityEnemySettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "EnvironmentQuery/EQSTestingPawn.h"
@@ -271,6 +272,11 @@ void UEnemyMassSubsystem::SetMassLocation(const FMassEntityHandle& MassEntity, c
 		if (FTransformFragment* TransformFragment = MassEntityManager->GetFragmentDataPtr<FTransformFragment>(MassEntity))
 		{
 			TransformFragment->GetMutableTransform().SetLocation(Position);
+		}
+
+		if (FEnemyWanderFragment* EnemyWanderFragment = MassEntityManager->GetFragmentDataPtr<FEnemyWanderFragment>(MassEntity))
+		{
+			EnemyWanderFragment->Origin = Position;
 		}
 	}
 }
