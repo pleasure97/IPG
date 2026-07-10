@@ -20,7 +20,8 @@
 				"IrisCore",
 				"ModularGameplay",
 				"GameplayAbilities",
-				"AnimGraph"
+				"AnimGraph",
+				"MassEntity"
 			]
 		}
 	],
