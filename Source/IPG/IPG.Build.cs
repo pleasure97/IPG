@@ -34,6 +34,14 @@ public class IPG : ModuleRules
             "AutomationController", 
 			"Slate", 
 			"SlateCore",
+			"DeveloperSettings", 
+			"NavigationSystem", 
+			"MassEntity", 
+			"MassCommon", 
+			"MassActors",  
+			"MassSpawner",
+			"MassLOD",
+			"MassRepresentation"
         });
 
 		PublicIncludePaths.AddRange(new string[] {

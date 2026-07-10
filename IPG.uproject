@@ -20,7 +20,8 @@
 				"IrisCore",
 				"ModularGameplay",
 				"GameplayAbilities",
-				"AnimGraph"
+				"AnimGraph",
+				"MassEntity"
 			]
 		}
 	],
@@ -62,6 +63,10 @@
 		},
 		{
 			"Name": "ModularGameplay",
+			"Enabled": true
+		},
+		{
+			"Name": "MassGameplay",
 			"Enabled": true
 		}
 	]
