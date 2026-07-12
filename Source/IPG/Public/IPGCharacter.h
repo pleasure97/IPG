@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "AbilitySystemInterface.h"
+#include "Interface/IPGMotionMatchingInterface.h"
 #include "IPGCharacter.generated.h"
 
 class USpringArmComponent;
@@ -22,7 +23,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
  *  Implements a controllable orbiting camera
  */
 UCLASS(abstract)
-class AIPGCharacter : public ACharacter, public IAbilitySystemInterface
+class AIPGCharacter : public ACharacter, public IAbilitySystemInterface, public IIPGMotionMatchingInterface
 {
 	GENERATED_BODY()
 
@@ -56,12 +57,30 @@ public:
 	/** Constructor */
 	AIPGCharacter();	
 
+	/* IPG Motion Matching Interface */
+	virtual FIPGCharacterPropertiesForAnimation GetPropertiesForAnimation() const override;
+
 protected:
 
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void BeginPlay() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	/* Motion Matching  */
+	UPROPERTY(Replicated)
+	FIPGPlayerInputState CharacterInputState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EIPGGait Gait;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bJustLanded;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector LandVelocity;
 
 protected:
 

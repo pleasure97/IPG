@@ -13,6 +13,7 @@
 #include "IPG.h"
 #include "AbilitySystemComponent.h"
 #include "Player/IPGPlayerExtensionComponent.h"
+#include "Net/UnrealNetwork.h"
 #if UE_WITH_IRIS
 #include "Net/Iris/ReplicationSystem/ReplicationSystemUtil.h"   
 #include "Net/Iris/ReplicationSystem/EngineReplicationBridge.h"   
@@ -62,6 +63,67 @@ AIPGCharacter::AIPGCharacter()
 	PlayerExtensionComponent->RegisterAndCallWhenAbilitySystemInitialized(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &AIPGCharacter::OnAbilitySystemInitialized));
 	PlayerExtensionComponent->RegisterWhenAbilitySystemUninitialized(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &AIPGCharacter::OnAbilitySystemUninitialized));
 
+}
+
+FIPGCharacterPropertiesForAnimation AIPGCharacter::GetPropertiesForAnimation() const
+{
+	FIPGCharacterPropertiesForAnimation CharacterPropertiesForAnimation;
+	
+	UCharacterMovementComponent* CharMovement = GetCharacterMovement(); 
+	if (!IsValid(CharMovement))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Charcter movement component is not valid in AIPGCharacter::GetPropertiesForAnimation()"));
+		return CharacterPropertiesForAnimation;
+	}
+
+	// Movement Mode
+	EIPGMovementMode MovementMode;
+
+	switch (CharMovement->MovementMode)
+	{
+	case EMovementMode::MOVE_None:
+		MovementMode = EIPGMovementMode::OnGround;
+		break;
+	case EMovementMode::MOVE_Custom:
+		MovementMode = EIPGMovementMode::OnGround;
+		break;
+	case EMovementMode::MOVE_Falling:
+		MovementMode = EIPGMovementMode::InAir;
+		break;
+	case EMovementMode::MOVE_Flying:
+		MovementMode = EIPGMovementMode::OnGround;
+		break;
+	case EMovementMode::MOVE_NavWalking:
+		MovementMode = EIPGMovementMode::OnGround;
+		break;
+	case EMovementMode::MOVE_Swimming:
+		MovementMode = EIPGMovementMode::InAir;
+		break;
+	case EMovementMode::MOVE_Walking:
+		MovementMode = EIPGMovementMode::OnGround;
+		break;
+	default:
+		break;
+
+	}
+
+	CharacterPropertiesForAnimation.InputState = CharacterInputState;
+	CharacterPropertiesForAnimation.MovementMode = MovementMode;
+	CharacterPropertiesForAnimation.Stance = CharMovement->IsCrouching() ? EIPGAnimStance::Crouch : EIPGAnimStance::Stand;
+	CharacterPropertiesForAnimation.RotationMode = CharMovement->bOrientRotationToMovement ? EIPGRotationMode::OrientationToMovement : EIPGRotationMode::Strafe;
+	CharacterPropertiesForAnimation.Gait = Gait;
+	CharacterPropertiesForAnimation.ActorTransform = GetActorTransform(); 
+	CharacterPropertiesForAnimation.Velocity = CharMovement->Velocity;
+	CharacterPropertiesForAnimation.InputAcceleration = CharMovement->GetCurrentAcceleration(); 
+	CharacterPropertiesForAnimation.CurrentMaxAcceleration = CharMovement->GetMaxAcceleration(); 
+	CharacterPropertiesForAnimation.CurrentMaxDeceleration = CharMovement->BrakingDecelerationWalking;
+	CharacterPropertiesForAnimation.OrientationIntent = GetActorRotation(); 
+	CharacterPropertiesForAnimation.AimingRotation = IsLocallyControlled() ? GetControlRotation() : GetBaseAimRotation();
+	CharacterPropertiesForAnimation.bJustLanded = bJustLanded;
+	CharacterPropertiesForAnimation.LandVelocity = LandVelocity;
+	CharacterPropertiesForAnimation.GroundNormal = CharMovement->CurrentFloor.HitResult.ImpactNormal;
+
+	return CharacterPropertiesForAnimation;
 }
 
 void AIPGCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -115,6 +177,17 @@ void AIPGCharacter::BeginPlay()
 		ReplicationSystem->SetStaticPriority(Handle, 1.0f);
 	}
 #endif
+}
+
+void AIPGCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps); 
+
+	// Iris Push Model
+	FDoRepLifetimeParams Params;
+	Params.bIsPushBased = true;
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(AIPGCharacter, CharacterInputState, Params);
 }
 
 void AIPGCharacter::Move(const FInputActionValue& Value)
