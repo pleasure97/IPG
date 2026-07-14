@@ -13,7 +13,9 @@
 #include "IPG.h"
 #include "AbilitySystemComponent.h"
 #include "Player/IPGPlayerExtensionComponent.h"
+#include "Player/IPGPreCMCTickComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Kismet/KismetMathLibrary.h"
 #if UE_WITH_IRIS
 #include "Net/Iris/ReplicationSystem/ReplicationSystemUtil.h"   
 #include "Net/Iris/ReplicationSystem/EngineReplicationBridge.h"   
@@ -63,9 +65,10 @@ AIPGCharacter::AIPGCharacter()
 	PlayerExtensionComponent->RegisterAndCallWhenAbilitySystemInitialized(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &AIPGCharacter::OnAbilitySystemInitialized));
 	PlayerExtensionComponent->RegisterWhenAbilitySystemUninitialized(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &AIPGCharacter::OnAbilitySystemUninitialized));
 
+	PreCMCTickComponent = CreateDefaultSubobject<UIPGPreCMCTickComponent>(TEXT("PreCMCTickComponent"));
 }
 
-FIPGCharacterPropertiesForAnimation AIPGCharacter::GetPropertiesForAnimation() const
+FIPGCharacterPropertiesForAnimation AIPGCharacter::GetPropertiesForAnimation_Implementation() const
 {
 	FIPGCharacterPropertiesForAnimation CharacterPropertiesForAnimation;
 	
@@ -154,6 +157,8 @@ void AIPGCharacter::BeginPlay()
 {
 	Super::BeginPlay(); 
 
+	PreCMCTickComponent->OnIPGPreCMCTickSignature.AddUObject(this, &AIPGCharacter::HandlePreCMCTick);
+
 #if UE_WITH_IRIS
 	if (!HasAuthority())
 	{
@@ -188,6 +193,47 @@ void AIPGCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	Params.bIsPushBased = true;
 
 	DOREPLIFETIME_WITH_PARAMS_FAST(AIPGCharacter, CharacterInputState, Params);
+}
+
+void AIPGCharacter::HandlePreCMCTick()
+{
+	UpdateRotationPreCMC();
+
+	UpdateMovementPreCMC();
+}
+
+void AIPGCharacter::UpdateRotationPreCMC()
+{
+	UCharacterMovementComponent* CMC = GetCharacterMovement();
+	if (!IsValid(CMC))
+	{
+		return;
+	}
+
+	// Wants to "Strafe" or "Aim"
+	bool bWantsToStrafeOrAim = CharacterInputState.bWantsToStrafe || CharacterInputState.bWantsToAim;
+	bool bUseControllerDesiredRotation = bWantsToStrafeOrAim ? true : false;
+	bool bOrientRotationToMovement = bWantsToStrafeOrAim ? false : true;
+
+	CMC->bUseControllerDesiredRotation = bUseControllerDesiredRotation;
+	CMC->bOrientRotationToMovement = bOrientRotationToMovement;
+
+	// Falling
+	FRotator RotationRate = CMC->IsFalling() ? FRotator(0.f, 0.f, 200.f) : FRotator(0.f, 0.f, -1.f);
+	CMC->RotationRate = RotationRate;
+}
+
+void AIPGCharacter::UpdateMovementPreCMC()
+{
+	Gait = GetDesiredGait(); 
+
+	// TODO 
+}
+
+EIPGGait AIPGCharacter::GetDesiredGait() const
+{
+	// TODO
+	return EIPGGait::Walk;
 }
 
 void AIPGCharacter::Move(const FInputActionValue& Value)

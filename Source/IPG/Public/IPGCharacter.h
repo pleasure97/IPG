@@ -15,6 +15,7 @@ class UInputAction;
 struct FInputActionValue;
 class UAbilitySystemComponent;
 class UIPGPlayerExtensionComponent;
+class UIPGPreCMCTickComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -58,7 +59,7 @@ public:
 	AIPGCharacter();	
 
 	/* IPG Motion Matching Interface */
-	virtual FIPGCharacterPropertiesForAnimation GetPropertiesForAnimation() const override;
+	virtual FIPGCharacterPropertiesForAnimation GetPropertiesForAnimation_Implementation() const override;
 
 protected:
 
@@ -70,6 +71,17 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/* Motion Matching  */
+	void HandlePreCMCTick();
+
+	void UpdateRotationPreCMC(); 
+
+	void UpdateMovementPreCMC();
+
+	EIPGGait GetDesiredGait() const;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UIPGPreCMCTickComponent* PreCMCTickComponent;
+
 	UPROPERTY(Replicated)
 	FIPGPlayerInputState CharacterInputState;
 

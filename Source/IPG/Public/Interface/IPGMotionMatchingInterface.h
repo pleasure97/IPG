@@ -8,7 +8,7 @@
 #include "IPGMotionMatchingInterface.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI)
+UINTERFACE(MinimalAPI, BlueprintType)
 class UIPGMotionMatchingInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -23,6 +23,9 @@ class IPG_API IIPGMotionMatchingInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual FIPGCharacterPropertiesForAnimation GetPropertiesForAnimation() const = 0;
-	
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Motion Matching")
+	FIPGCharacterPropertiesForAnimation GetPropertiesForAnimation() const;
+
+	virtual void UpdateRotationPreCMC() = 0; 
+	virtual void UpdateMovementPreCMC() = 0; 
 };
