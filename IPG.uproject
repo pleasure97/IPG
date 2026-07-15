@@ -21,7 +21,9 @@
 				"ModularGameplay",
 				"GameplayAbilities",
 				"AnimGraph",
-				"MassEntity"
+				"MassEntity",
+				"GameplayCameras",
+				"StateTreeModule"
 			]
 		}
 	],
