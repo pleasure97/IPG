@@ -5,12 +5,14 @@
 #include "ActionCameraDirectorViewportClient.h"
 #include "ActionCameraDirectorEditorToolkit.h"
 #include "ActionCameraDirectorViewport.h"
+#include "ActionCameraPreviewCharacter.h"
 #include "Animation/DebugSkelMeshComponent.h"
-#include "Core/CameraAsset.h"
-#include "Directors/SingleCameraDirector.h"
-#include "Build/CameraBuildLog.h"
-#include "GameFramework/GameplayCameraComponent.h"
+#include "GameFramework/GameplayCameraRigComponent.h"
 #include "CineCameraComponent.h"
+#include "AnimPreviewInstance.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Animation/AnimSequenceHelpers.h"
 
 FActionCameraDirectorViewportClient::FActionCameraDirectorViewportClient(
 	TWeakPtr<FActionCameraDirectorEditorToolkit> InToolkit,
@@ -20,35 +22,52 @@ FActionCameraDirectorViewportClient::FActionCameraDirectorViewportClient(
 {
 	SetRealtime(true);
 
-    AActor* PreviewActor = InPreviewScene->GetWorld()->SpawnActor<AActor>(); 
-	
+    PreviewMeshTickFunction.bCanEverTick = true;
+    PreviewMeshTickFunction.Target = nullptr;
+
+    PreviewCameraTickFunction.bCanEverTick = true;
+    PreviewCameraTickFunction.Target = nullptr;
+
+    PreviewCharacter = InPreviewScene->GetWorld()->SpawnActor<AActionCameraPreviewCharacter>();
+    if (PreviewCharacter)
+    {
+        PreviewCharacter->SetActorRotation(FRotator::ZeroRotator);
+        PreviewCharacter->GetCapsuleComponent()->SetVisibility(false);
+        PreviewCharacter->GetCapsuleComponent()->SetHiddenInGame(true);
+
+        if (UCharacterMovementComponent* CharacterMovementComponent = PreviewCharacter->GetCharacterMovement())
+        {
+            CharacterMovementComponent->GravityScale = 0.f;
+            CharacterMovementComponent->SetMovementMode(MOVE_Flying);
+        }
+    }
+    
     // Spawn character for testing action camera system
     if (TSharedPtr<FActionCameraDirectorEditorToolkit> Toolkit = ToolkitPtr.Pin())
     {
-        if (USkeletalMesh* PreviewSkeletalMesh = Toolkit->GetAsset()->PreviewMesh.LoadSynchronous())
+        if (UActionCameraDirectorAsset* ActionCameraDirectorAsset = Toolkit->GetAsset())
         {
-            PreviewMeshComponent = NewObject<UDebugSkelMeshComponent>();
-            PreviewMeshComponent->SetSkeletalMesh(PreviewSkeletalMesh);
-            PreviewMeshComponent->RegisterComponentWithWorld(InPreviewScene->GetWorld());
+            if (USkeletalMesh* PreviewSkeletalMesh = ActionCameraDirectorAsset->PreviewMesh.LoadSynchronous())
+            {
+                PreviewMeshComponent = CastChecked<UDebugSkelMeshComponent>(PreviewCharacter->GetMesh());
+                PreviewMeshComponent->SetSkeletalMesh(PreviewSkeletalMesh);
+                PreviewMeshComponent->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+            }
         }
     }
 
-    // Create transient director and camera asset
-    PreviewDirector = NewObject<USingleCameraDirector>(); 
-    PreviewCameraAsset = NewObject<UCameraAsset>(); 
-    PreviewCameraAsset->SetCameraDirector(PreviewDirector);
-
-    // Since these are unsaved, transient assets, they do not go through the PreSave path and require a manual build.
-    UE::Cameras::FCameraBuildLog BuildLog;
-    PreviewCameraAsset->BuildCamera(BuildLog);
-
-    PreviewCameraComponent = NewObject<UGameplayCameraComponent>(PreviewActor);
-    PreviewCameraComponent->CameraReference.SetCameraAsset(PreviewCameraAsset);
-    PreviewCameraComponent->SetupAttachment(PreviewMeshComponent);
+    PreviewCameraComponent = NewObject<UGameplayCameraRigComponent>(PreviewCharacter);
+    PreviewCameraComponent->SetupAttachment(PreviewCharacter->GetCapsuleComponent());
     PreviewCameraComponent->RegisterComponentWithWorld(InPreviewScene->GetWorld());
 
+    DummyController = InPreviewScene->GetWorld()->SpawnActor<APlayerController>();
+    if (DummyController)
+    {
+        DummyController->Possess(PreviewCharacter);
+    }
+
     PreviewCameraComponent->ActivateCameraForPlayerController(
-        nullptr, false, EGameplayCameraComponentActivationMode::Push);
+        DummyController, false, EGameplayCameraComponentActivationMode::Push);
 
     RefreshCameraForSelectedStep();
 }
@@ -57,9 +76,48 @@ void FActionCameraDirectorViewportClient::Tick(float DeltaSeconds)
 {
     FEditorViewportClient::Tick(DeltaSeconds);
 
+    const float PrevTime = PlaybackTime;
+
+    if (bPlaying)
+    {
+        float NewTime = PlaybackTime + DeltaSeconds;
+        const float MaxTime = GetMaxPlaybackTime();
+
+        if (MaxTime > KINDA_SMALL_NUMBER && NewTime > MaxTime)
+        {
+            NewTime = bLooping ? FMath::Fmod(NewTime, MaxTime) : MaxTime;
+            if (!bLooping)
+            {
+                bPlaying = false;   
+            }
+        }
+
+        PlaybackTime = NewTime;
+    }
+
+    UpdatePreviewAnimation(PlaybackTime);
+
+    if (PreviewScene)
+    {
+        PreviewScene->GetWorld()->Tick(LEVELTICK_All, DeltaSeconds);
+    }
+
+    if (TSharedPtr<FActionCameraDirectorEditorToolkit> Toolkit = ToolkitPtr.Pin())
+    {
+        if (UAnimSequence* AnimSequence = Toolkit->GetAsset()->ReferenceAnimation.LoadSynchronous())
+        {
+            if (PreviewCharacter && AnimSequence->HasRootMotion() && !FMath::IsNearlyEqual(PrevTime, PlaybackTime))
+            {
+                const FTransform RootMotionDelta =
+                    UE::Anim::ExtractRootMotionFromAnimationAsset(AnimSequence, nullptr, PrevTime, PlaybackTime);
+                PreviewCharacter->AddActorLocalTransform(RootMotionDelta);
+            }
+        }
+    }
+
     if (PreviewCameraComponent)
     {
-        PreviewCameraComponent->TickComponent(DeltaSeconds, LEVELTICK_All, nullptr);
+        PreviewCameraComponent->TickComponent(DeltaSeconds, LEVELTICK_All, &PreviewCameraTickFunction);
 
         if (UCineCameraComponent* OutputCamera = PreviewCameraComponent->GetOutputCameraComponent())
         {
@@ -73,7 +131,7 @@ void FActionCameraDirectorViewportClient::Tick(float DeltaSeconds)
 void FActionCameraDirectorViewportClient::RefreshCameraForSelectedStep()
 {
     TSharedPtr<FActionCameraDirectorEditorToolkit> ToolKit = ToolkitPtr.Pin();
-    if (!ToolKit.IsValid())
+    if (!ToolKit.IsValid() || !IsValid(PreviewCameraComponent))
     {
         return;
     }
@@ -81,10 +139,29 @@ void FActionCameraDirectorViewportClient::RefreshCameraForSelectedStep()
     UActionCameraDirectorAsset* ActionCameraDirectorAsset = ToolKit->GetAsset(); 
     int32 SelectedIndex = ToolKit->GetSelectedStepIndex(); 
 
-    if (ActionCameraDirectorAsset && ActionCameraDirectorAsset->CameraSteps.IsValidIndex(SelectedIndex) && PreviewDirector)
+    UCameraRigAsset* TargetCameraRig = nullptr;
+    if (ActionCameraDirectorAsset && ActionCameraDirectorAsset->CameraSteps.IsValidIndex(SelectedIndex))
     {
-        const FActionCameraStep& ActionCameraStep = ActionCameraDirectorAsset->CameraSteps[SelectedIndex];
-        PreviewDirector->CameraRig = ActionCameraStep.CameraRig.LoadSynchronous();
+        TargetCameraRig = ActionCameraDirectorAsset->CameraSteps[SelectedIndex].CameraRig.LoadSynchronous();
+    }
+
+    if (PreviewCameraComponent->CameraRigReference.GetCameraRig() == TargetCameraRig)
+    {
+        return;
+    }
+
+    PreviewCameraComponent->CameraRigReference.SetCameraRig(TargetCameraRig);
+
+    FStructProperty* CameraRigStructProperty = FindFProperty<FStructProperty>(
+        UGameplayCameraRigComponent::StaticClass(),
+        GET_MEMBER_NAME_CHECKED(UGameplayCameraRigComponent, CameraRigReference));
+
+    FProperty* CameraRigProperty = CameraRigStructProperty ? FindFProperty<FProperty>(CameraRigStructProperty->Struct, TEXT("CameraRig")) : nullptr;
+    if (CameraRigProperty)
+    {
+        FPropertyChangedEvent PropertyChangedEvent(CameraRigProperty);
+        PropertyChangedEvent.SetActiveMemberProperty(CameraRigStructProperty);
+        PreviewCameraComponent->PostEditChangeProperty(PropertyChangedEvent);
     }
 }
 
@@ -138,4 +215,37 @@ float FActionCameraDirectorViewportClient::GetMaxPlaybackTime() const
 void FActionCameraDirectorViewportClient::SetMaxPlaybackTime(float NewMaxPlaybackTime)
 {
     MaxPlaybackTime = NewMaxPlaybackTime;
+}
+
+void FActionCameraDirectorViewportClient::UpdatePreviewAnimation(float Time)
+{
+    if (!PreviewMeshComponent)
+    {
+        return;
+    }
+
+    TSharedPtr<FActionCameraDirectorEditorToolkit> Toolkit = ToolkitPtr.Pin();
+    if (!Toolkit.IsValid() || !Toolkit->GetAsset())
+    {
+        return;
+    }
+
+    UAnimSequence* AnimSequence = Toolkit->GetAsset()->ReferenceAnimation.LoadSynchronous();
+    if (!IsValid(AnimSequence))
+    {
+        return;
+    }
+    
+    if (PreviewMeshComponent->PreviewInstance == nullptr || PreviewMeshComponent->PreviewInstance->GetCurrentAsset() != AnimSequence)
+    {
+        PreviewMeshComponent->EnablePreview(true, AnimSequence);
+        PreviewMeshComponent->SetProcessRootMotionMode(EProcessRootMotionMode::LoopAndReset);
+    }
+
+    if (UAnimPreviewInstance* AnimPreviewInstance = PreviewMeshComponent->PreviewInstance)
+    {
+        AnimPreviewInstance->SetPosition(Time, false);
+    }
+
+    PreviewMeshComponent->TickComponent(0.f, LEVELTICK_All, &PreviewMeshTickFunction);
 }

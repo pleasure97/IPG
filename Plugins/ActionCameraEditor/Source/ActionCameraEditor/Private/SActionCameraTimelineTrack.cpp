@@ -129,6 +129,12 @@ int32 SActionCameraTimelineTrack::OnPaint(const FPaintArgs& Args, const FGeometr
 	return LayerId + 7;
 }
 
+void SActionCameraTimelineTrack::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
+{
+	SLeafWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+	Invalidate(EInvalidateWidgetReason::Paint);
+}
+
 FVector2D SActionCameraTimelineTrack::ComputeDesiredSize(float) const
 {
 	const float Width = TimeToPixel(GetMaxTime()) + 40.f; 

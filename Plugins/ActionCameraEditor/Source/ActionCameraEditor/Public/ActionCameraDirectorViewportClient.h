@@ -10,8 +10,9 @@ class FActionCameraDirectorEditorToolkit;
 class FPreviewScene;
 class SActionCameraDirectorViewport;
 class UDebugSkelMeshComponent;
-class UGameplayCameraComponent;
-class USingleCameraDirector;
+class UGameplayCameraRigComponent;
+class AActionCameraPreviewCharacter;
+class APlayerController;
 class UCameraAsset;
 
 class FActionCameraDirectorViewportClient : public FEditorViewportClient
@@ -37,12 +38,18 @@ public:
 	void SetMaxPlaybackTime(float NewMaxPlaybackTime);
 
 private:
+	void UpdatePreviewAnimation(float Time);
+
 	TWeakPtr<FActionCameraDirectorEditorToolkit> ToolkitPtr;
 
+	FActorComponentTickFunction PreviewMeshTickFunction;
+	FActorComponentTickFunction PreviewCameraTickFunction;
+
 	UDebugSkelMeshComponent* PreviewMeshComponent = nullptr;
-	UGameplayCameraComponent* PreviewCameraComponent = nullptr;
-	USingleCameraDirector* PreviewDirector = nullptr; 
-	UCameraAsset* PreviewCameraAsset = nullptr;
+	UGameplayCameraRigComponent* PreviewCameraComponent = nullptr;
+
+	AActionCameraPreviewCharacter* PreviewCharacter = nullptr;
+	APlayerController* DummyController = nullptr;
 
 	/* Playing*/
 	bool bPlaying = false;

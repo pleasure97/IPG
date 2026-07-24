@@ -163,7 +163,7 @@ FReply SActionCameraDirectorViewport::OnPlayPauseClicked()
 const FSlateBrush* SActionCameraDirectorViewport::GetPlayPauseIcon() const
 {
     const bool bIsPlaying = TypedViewportClient.IsValid() && TypedViewportClient->IsPlaying();
-    return FAppStyle::GetBrush(bIsPlaying ? "MediaControl.Pause" : "MediaControl.Play");
+    return FAppStyle::GetBrush(bIsPlaying ? "Animation.Pause" : "Animation.Forward");
 }
 
 FText SActionCameraDirectorViewport::GetPlayPauseToolTip() const

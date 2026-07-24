@@ -29,6 +29,7 @@ public class ActionCameraEditor : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "GameplayCameras",
+				"AnimGraph"
 				// ... add other public dependencies that you statically link with here ...
 			}
             );

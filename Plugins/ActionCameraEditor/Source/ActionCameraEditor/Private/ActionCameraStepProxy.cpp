@@ -21,9 +21,10 @@ void UActionCameraStepProxy::PostEditChangeProperty(FPropertyChangedEvent& Prope
     if (OwningAsset && OwningAsset->CameraSteps.IsValidIndex(StepIndex))
     {
         OwningAsset->Modify();
-        OwningAsset->CameraSteps[StepIndex] = StepData;   // 원본 배열로 되쓰기
+        // Overwrite with the original array
+        OwningAsset->CameraSteps[StepIndex] = StepData;  
         OwningAsset->MarkPackageDirty();
-
-        OnChanged.ExecuteIfBound();  // Toolkit에 "값이 바뀌었다" 통지
+        // Notify the toolkit that the value has changed
+        OnChanged.ExecuteIfBound(); 
     }
 }
