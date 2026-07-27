@@ -123,12 +123,27 @@ void FActionCameraDirectorEditorToolkit::UnregisterTabSpawners(const TSharedRef<
 void FActionCameraDirectorEditorToolkit::AddReferencedObjects(FReferenceCollector& Collector)
 {
 	Collector.AddReferencedObject(EditingAsset);
-	Collector.AddReferencedObject(SelectedStepProxy);
+	Collector.AddReferencedObject(SelectedEventProxy);
 }
 
 FString FActionCameraDirectorEditorToolkit::GetReferencerName() const
 {
 	return TEXT("FActionCameraDirectorEditorToolkit");
+}
+
+void FActionCameraDirectorEditorToolkit::RecalculateClipTimes()
+{
+	float AccumulatedTime = 0.f;
+	for (FActionCameraClip& ActionCameraClip : EditingAsset->CameraSteps)
+	{
+		ActionCameraClip.StartTime = AccumulatedTime;
+
+		if (UAnimSequenceBase* AnimSequenceBase = ActionCameraClip.Animation.LoadSynchronous())
+		{
+			ActionCameraClip.Duration = AnimSequenceBase->GetPlayLength();
+		}
+		AccumulatedTime += ActionCameraClip.Duration;
+	}
 }
 
 void FActionCameraDirectorEditorToolkit::SetSelectedStep(int32 StepIndex)
@@ -137,17 +152,17 @@ void FActionCameraDirectorEditorToolkit::SetSelectedStep(int32 StepIndex)
 
 	if (EditingAsset && EditingAsset->CameraSteps.IsValidIndex(StepIndex))
 	{
-		SelectedStepProxy = NewObject<UActionCameraStepProxy>(GetTransientPackage());
-		SelectedStepProxy->Init(
+		SelectedEventProxy = NewObject<UActionCameraEventProxy>(GetTransientPackage());
+		SelectedEventProxy->Init(
 			EditingAsset,
 			StepIndex,
-			FOnActionCameraStepChanged::CreateSP(this, &FActionCameraDirectorEditorToolkit::OnStepProxyChanged));
+			FOnActionCameraEventChanged::CreateSP(this, &FActionCameraDirectorEditorToolkit::OnStepProxyChanged));
 
-		DetailsView->SetObject(SelectedStepProxy);
+		DetailsView->SetObject(SelectedEventProxy);
 	}
 	else
 	{
-		SelectedStepProxy = nullptr;
+		SelectedEventProxy = nullptr;
 		DetailsView->SetObject(nullptr);
 	}
 
@@ -174,6 +189,8 @@ TSharedPtr<SActionCameraDirectorViewport> FActionCameraDirectorEditorToolkit::Ge
 
 void FActionCameraDirectorEditorToolkit::OnAssetPropertyChanged(const FPropertyChangedEvent& Event)
 {
+	RecalculateClipTimes();
+
 	SetSelectedStep(
 		EditingAsset->CameraSteps.IsValidIndex(SelectedStepIndex) ? SelectedStepIndex : (EditingAsset->CameraSteps.Num() > 0 ? 0 : INDEX_NONE));
 
@@ -208,7 +225,7 @@ TSharedRef<SDockTab> FActionCameraDirectorEditorToolkit::SpawnTab_Details(const 
 			SNew(SSplitter)
 				.Orientation(Orient_Vertical)
 
-				+ SSplitter::Slot().Value(0.35f)
+				+ SSplitter::Slot().Value(0.65f)
 				[
 					SNew(SVerticalBox)
 						+ SVerticalBox::Slot().AutoHeight().Padding(4.0f, 4.0f, 4.0f, 0.0f)
@@ -223,7 +240,7 @@ TSharedRef<SDockTab> FActionCameraDirectorEditorToolkit::SpawnTab_Details(const 
 						]
 				]
 
-			+ SSplitter::Slot().Value(0.65f)
+			+ SSplitter::Slot().Value(0.35f)
 				[
 					SNew(SVerticalBox)
 						+ SVerticalBox::Slot().AutoHeight().Padding(4.0f, 4.0f, 4.0f, 0.0f)

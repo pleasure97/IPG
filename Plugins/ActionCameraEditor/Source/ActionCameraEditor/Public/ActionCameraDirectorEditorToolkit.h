@@ -5,7 +5,7 @@
 #include "ToolKits/AssetEditorToolkit.h"
 #include "UObject/GCObject.h"
 #include "ActionCameraDirectorAsset.h"
-#include "ActionCameraStepProxy.h"
+#include "ActionCameraEventProxy.h"
 
 class SActionCameraDirectorViewport;
 class IDetailsView;
@@ -29,6 +29,9 @@ public:
 	/* FGCObject Interface */
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
 	virtual FString GetReferencerName() const override;
+	/* FGCObject Interface End */
+
+	void RecalculateClipTimes(); 
 
 	void SetSelectedStep(int32 StepIndex);
 
@@ -46,8 +49,8 @@ private:
 	void OnAssetPropertyChanged(const FPropertyChangedEvent& Event);
 	void OnStepProxyChanged();
 
-	UActionCameraDirectorAsset* EditingAsset = nullptr;
-	UActionCameraStepProxy* SelectedStepProxy = nullptr;
+	TObjectPtr<UActionCameraDirectorAsset> EditingAsset = nullptr;
+	TObjectPtr<UActionCameraEventProxy> SelectedEventProxy = nullptr;
 
 	TSharedPtr<IDetailsView> AssetDetailsView;
 	TSharedPtr<IDetailsView> DetailsView;   

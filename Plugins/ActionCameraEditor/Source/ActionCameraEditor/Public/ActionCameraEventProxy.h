@@ -4,20 +4,20 @@
 
 #include "UObject/Object.h"
 #include "ActionCameraDirectorAsset.h"
-#include "ActionCameraStepProxy.generated.h"
+#include "ActionCameraEventProxy.generated.h"
 
-DECLARE_DELEGATE(FOnActionCameraStepChanged);
+DECLARE_DELEGATE(FOnActionCameraEventChanged);
 
 UCLASS()
-class UActionCameraStepProxy : public UObject
+class UActionCameraEventProxy : public UObject
 {
     GENERATED_BODY()
 
 public:
     UPROPERTY(EditAnywhere, Category = "Step")
-    FActionCameraStep StepData;
+    FActionCameraEvent EventData;
 
-    void Init(UActionCameraDirectorAsset* InOwningAsset, int32 InStepIndex, FOnActionCameraStepChanged InOnChanged);
+    void Init(UActionCameraDirectorAsset* InOwningAsset, int32 InIndex, FOnActionCameraEventChanged InOnChanged);
 
 #if WITH_EDITOR
     virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -27,7 +27,7 @@ private:
     UPROPERTY()
     TObjectPtr<UActionCameraDirectorAsset> OwningAsset = nullptr;
 
-    int32 StepIndex = INDEX_NONE;
+    int32 Index = INDEX_NONE;
 
-    FOnActionCameraStepChanged OnChanged;
+    FOnActionCameraEventChanged OnChanged;
 };

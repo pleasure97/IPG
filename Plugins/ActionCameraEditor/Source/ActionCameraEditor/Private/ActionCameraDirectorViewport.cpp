@@ -34,7 +34,7 @@ void SActionCameraDirectorViewport::RefreshCameraForSelectedStep()
 {
     if (TypedViewportClient.IsValid())
     {
-        TypedViewportClient->RefreshCameraForSelectedStep();
+        TypedViewportClient->RefreshCameraForTime(0.f);
     }
 }
 

@@ -15,7 +15,7 @@ public:
 
     void Construct(const FArguments& InArgs); 
 
-    void SetPlayheadTime(float NewPlayheadTime);
+    void ExtendTimelineBy(float ExtraSeconds);
 
 protected:
     /* SWidget Interface */
@@ -52,15 +52,22 @@ private:
         None,
         Move,
         ResizeLeft,
-        ResizeRight
+        ResizeRight,
+        MoveEvent
     };
 
     float PixelToTime(float LocalX) const; 
     float TimeToPixel(float Time) const; 
 
     float GetMaxTime() const;
+    float GetLivePlayheadTime() const; 
 
     int32 HitTestStep(float LocalX, EEdgeHit& OutEdge) const; 
+    int32 HitTestEvent(float LocalX) const; 
+    void ShowEventContextMenu(const FVector2D& ScreenPosition, float ClickedTime, int32 HitEventIndex); 
+    void AddEventAt(float Time); 
+    void DeleteEvent(int32 EventIndex);
+    void RenameEvent(int32 EventIndex, const FVector2D& ScreenPosition);
 
     /* Scrub */
     void ScrubToPixel(float LocalX);
@@ -69,17 +76,22 @@ private:
     /* Drag */
     EDragMode DragMode = EDragMode::None;
     int32 DraggedStepIndex = INDEX_NONE;
+    int32 DraggedEventIndex = INDEX_NONE;
     float DragStartMouseX = 0.f;
     float DragStartStepTime = 0.f;
     float DragStartStepDuration = 0.f;
 
     float PlayheadTime = 0.f;
+    float ManualExtensionSeconds = 0.f;
 
     static constexpr float PixelsPerSecond = 120.f;
     static constexpr float RulerHeight = 24.f;
     static constexpr float TrackRowHeight = 48.f;
     static constexpr float EdgeGrabPixels = 6.f;
     static constexpr float MinDuration = 0.05f;
+    static constexpr float EventRowHeight = 28.f;
+    static constexpr float EventMarkerHalfWidth = 6.f;
+    static constexpr float PlayheadGrabPixels = 6.f;
 
     TWeakPtr<FActionCameraDirectorEditorToolkit> ToolkitPtr;
 };
