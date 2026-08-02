@@ -42,10 +42,29 @@ void AIrisTestGameMode::PostLogin(APlayerController* NewPlayer)
     }
 }
 
+void AIrisTestGameMode::Logout(AController* Exiting)
+{
+    Super::Logout(Exiting); 
+
+    UE_LOG(LogTemp, Log, TEXT("Player Left. Remaining Players: %d"), GetNumPlayers());
+}
+
+void AIrisTestGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+    Super::InitGame(MapName, Options, ErrorMessage); 
+
+    GetWorldTimerManager().SetTimer(
+        StatusLogTimerHandle,
+        this,
+        &AIrisTestGameMode::LogServerStatus,
+        3.0f,
+        true
+    );
+}
+
 void AIrisTestGameMode::StartPlay()
 {
     UE_LOG(LogTemp, Log, TEXT("Iris Test Game Mode Starts Play!!!"));
-    return;
 }
 
 void AIrisTestGameMode::BeginPlay()
@@ -98,4 +117,14 @@ void AIrisTestGameMode::StopProfilingAndShutdown()
     // so that the Docker container can detect the exit status code and execute the S3 upload
     FGenericPlatformMisc::RequestExit(false);
 #endif
+}
+
+void AIrisTestGameMode::LogServerStatus()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[Server Status] Current Players: %d / %d (Required to Start: %d) | Game Started: %s"),
+        GetNumPlayers(),
+        MaxPlayers,
+        RequiredPlayersToStart,
+        bGameStarted ? TEXT("True") : TEXT("False")
+    );
 }

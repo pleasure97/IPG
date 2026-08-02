@@ -20,7 +20,6 @@
 				"IrisCore",
 				"ModularGameplay",
 				"GameplayAbilities",
-				"AnimGraph",
 				"MassEntity",
 				"GameplayCameras",
 				"StateTreeModule"

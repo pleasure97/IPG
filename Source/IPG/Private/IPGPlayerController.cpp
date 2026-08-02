@@ -13,6 +13,12 @@ void AIPGPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Block dedicated servers from executing UI-related logic.
+	if (IsRunningDedicatedServer())
+	{
+		return;
+	}
+
 	// only spawn touch controls on local player controllers
 	if (ShouldUseTouchControls() && IsLocalPlayerController())
 	{
