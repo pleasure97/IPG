@@ -18,6 +18,8 @@ class IPG_API AIrisTestGameMode : public AIPGGameMode
 	
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void Logout(AController* Exiting) override;
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void StartPlay() override;
 	virtual void BeginPlay() override;
 
@@ -34,10 +36,13 @@ private:
 	int32 RequiredPlayersToStart = 80;
 
 	FTimerHandle InsightsTimerHandle;
+	FTimerHandle StatusLogTimerHandle;
 	
 	bool bGameStarted = false;
 
 	void TriggerGameStart(); 
 
 	void StopProfilingAndShutdown();
+
+	void LogServerStatus();
 };

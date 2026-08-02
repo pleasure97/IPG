@@ -16,7 +16,15 @@
 #if UE_WITH_IRIS
 #include "Net/Iris/ReplicationSystem/ReplicationSystemUtil.h"   
 #include "Net/Iris/ReplicationSystem/EngineReplicationBridge.h"   
-#include "Iris/ReplicationSystem/ReplicationSystem.h"           
+#include "Iris/ReplicationSystem/ReplicationSystem.h"    
+
+static TAutoConsoleVariable<FString> CVarIrisPrioritizerName(
+	TEXT("net.Iris.TestPrioritizerName"),
+	TEXT("SphereNetObjectPrioritizer"),
+	TEXT("Sets the Iris NetObjectPrioritizer name to apply on AIPGCharacter spawn.\n")
+	TEXT("Examples: Default, LocationPrioritizer, FoVPrioritizer, SphericalPrioritizer"),
+	ECVF_Default
+);
 #endif
 
 AIPGCharacter::AIPGCharacter()
@@ -62,6 +70,11 @@ AIPGCharacter::AIPGCharacter()
 	PlayerExtensionComponent->RegisterAndCallWhenAbilitySystemInitialized(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &AIPGCharacter::OnAbilitySystemInitialized));
 	PlayerExtensionComponent->RegisterWhenAbilitySystemUninitialized(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &AIPGCharacter::OnAbilitySystemUninitialized));
 
+	// Setting for dense environments like large cities
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 void AIPGCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -108,11 +121,22 @@ void AIPGCharacter::BeginPlay()
 
 	UE::Net::FNetRefHandle Handle = ReplicationBridge->GetReplicatedRefHandle(this);
 
-	UE::Net::FNetObjectPrioritizerHandle PrioritizerHandle = ReplicationSystem->GetPrioritizerHandle(FName("FoVPrioritizer"));
+	static const FName TargetPrioritizerName(TEXT("SphereNetObjectPrioritizer"));
+
+	// TODO - Console Variable
+	/*FString PrioritizerNameString = CVarIrisPrioritizerName.GetValueOnGameThread();
+	FName PrioritizerName = FName(*PrioritizerNameString);*/
+
+	UE::Net::FNetObjectPrioritizerHandle PrioritizerHandle = ReplicationSystem->GetPrioritizerHandle(TargetPrioritizerName);
 
 	if (!ReplicationSystem->SetPrioritizer(Handle, PrioritizerHandle))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[Iris Test] Failed to set prioritizer: %s. Falling back to StaticPriority."), *TargetPrioritizerName.ToString());
 		ReplicationSystem->SetStaticPriority(Handle, 1.0f);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("[Iris Test] Successfully applied Prioritizer [%s] to %s"), *TargetPrioritizerName.ToString(), *GetName());
 	}
 #endif
 }
