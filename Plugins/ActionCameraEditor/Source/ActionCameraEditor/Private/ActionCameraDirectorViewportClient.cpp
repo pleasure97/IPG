@@ -6,18 +6,23 @@
 #include "ActionCameraDirectorEditorToolkit.h"
 #include "ActionCameraDirectorViewport.h"
 #include "ActionCameraPreviewCharacter.h"
-#include "Animation/DebugSkelMeshComponent.h"
 #include "GameFramework/GameplayCameraRigComponent.h"
 #include "CineCameraComponent.h"
-#include "AnimPreviewInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
-#include "Animation/AnimSequenceHelpers.h"
 #include "Core/CameraVariableCollection.h"
 #include "Kismet/GameplayStatics.h"
 #include "CanvasItem.h"
 #include "CanvasTypes.h"
+#include "Core/CameraOperation.h"
+#include "Core/CameraSystemEvaluator.h"
+#include "GameFramework/IGameplayCameraSystemHost.h"
+#if WITH_EDITOR
+#include "Animation/AnimSequenceHelpers.h"
+#include "Animation/DebugSkelMeshComponent.h"
+#include "AnimPreviewInstance.h"
+#endif // WITH_EDITOR
 
 static UCameraVariableAsset* FindVariableInCollectionByName(UCameraVariableCollection* Collection, FName VariableName)
 {
@@ -50,6 +55,10 @@ FActionCameraDirectorViewportClient::FActionCameraDirectorViewportClient(
 {
 	SetRealtime(true);
 
+    EngineShowFlags.SetEyeAdaptation(false);
+
+    SetupFloor(InPreviewScene);
+
     PreviewMeshTickFunction.bCanEverTick = true;
     PreviewMeshTickFunction.Target = nullptr;
 
@@ -75,6 +84,10 @@ FActionCameraDirectorViewportClient::FActionCameraDirectorViewportClient(
             {
                 PreviewMeshComponent = CastChecked<UDebugSkelMeshComponent>(PreviewCharacter->GetMesh());
                 PreviewMeshComponent->SetSkeletalMesh(PreviewSkeletalMesh);
+                PreviewMeshComponent->SetComponentTickEnabled(false);
+                PreviewMeshComponent->SetRelativeLocationAndRotation(
+                    FVector(0.0, 0.0, -89.0),
+                    FRotator(0.0, -90.0, 0.0));
             }
         }
     }
@@ -82,6 +95,7 @@ FActionCameraDirectorViewportClient::FActionCameraDirectorViewportClient(
     PreviewCameraComponent = NewObject<UGameplayCameraRigComponent>(PreviewCharacter);
     PreviewCameraComponent->SetupAttachment(PreviewCharacter->GetCapsuleComponent());
     PreviewCameraComponent->RegisterComponentWithWorld(InPreviewScene->GetWorld());
+    PreviewCameraComponent->SetComponentTickEnabled(false);
 
     DummyController = InPreviewScene->GetWorld()->SpawnActor<APlayerController>();
     if (DummyController)
@@ -113,12 +127,20 @@ void FActionCameraDirectorViewportClient::Tick(float DeltaSeconds)
             {
                 bPlaying = false;   
             }
+            else if (PreviewCharacter)
+            {
+                PreviewCharacter->SetActorLocationAndRotation(
+                    FVector::ZeroVector, 
+                    FRotator::ZeroRotator,
+                    false, nullptr, ETeleportType::TeleportPhysics);
+            }
         }
 
         PlaybackTime = NewTime;
     }
 
     UpdatePreviewAnimation(PlaybackTime);
+
     RefreshCameraForTime(PlaybackTime);
 
     if (PreviewScene)
@@ -126,8 +148,18 @@ void FActionCameraDirectorViewportClient::Tick(float DeltaSeconds)
         PreviewScene->GetWorld()->Tick(LEVELTICK_All, DeltaSeconds);
     }
 
-    if (PreviewCameraComponent)
+    if (PreviewCharacter && PreviewCameraComponent)
     {
+        using namespace UE::Cameras;
+
+        if (TSharedPtr<FCameraSystemEvaluator> Evaluator = PreviewCameraComponent->GetCameraSystemEvaluator())
+        {
+            FYawPitchCameraOperation YawPitchOp;
+            YawPitchOp.Yaw = FConsumableDouble::Absolute(PreviewCharacter->GetActorRotation().Yaw);
+            YawPitchOp.Pitch = FConsumableDouble::Absolute(0.0);
+            Evaluator->ExecuteOperation(YawPitchOp);
+        }
+
         PreviewCameraComponent->TickComponent(DeltaSeconds, LEVELTICK_All, &PreviewCameraTickFunction);
 
         if (UCineCameraComponent* OutputCamera = PreviewCameraComponent->GetOutputCameraComponent())
@@ -316,7 +348,22 @@ void FActionCameraDirectorViewportClient::UpdatePreviewAnimation(float Time)
 
     if (UAnimPreviewInstance* AnimPreviewInstance = PreviewMeshComponent->PreviewInstance)
     {
+        const float PrevLocalTime = AnimPreviewInstance->GetCurrentTime();
         AnimPreviewInstance->SetPosition(ResolvedClip.LocalTime, false);
+
+        if (UAnimSequence* AnimSequence = Cast<UAnimSequence>(ResolvedClip.AnimSequenceBase))
+        {
+            if (ResolvedClip.LocalTime > PrevLocalTime)
+            {
+                FAnimExtractContext ExtractionContext;
+                ExtractionContext.bLooping = false;
+
+                const FTransform RootMotionDelta = AnimSequence->ExtractRootMotionFromRange(
+                    PrevLocalTime, ResolvedClip.LocalTime, ExtractionContext);
+
+                PreviewCharacter->AddActorLocalTransform(RootMotionDelta, false, nullptr, ETeleportType::TeleportPhysics);
+            }
+        }
     }
 
     PreviewMeshComponent->TickComponent(0.f, LEVELTICK_All, &PreviewMeshTickFunction);
@@ -414,4 +461,33 @@ void FActionCameraDirectorViewportClient::ApplyVariableOverridesForTime(float Ti
         }
         break;
     }
+}
+
+void FActionCameraDirectorViewportClient::SetupFloor(FPreviewScene* InPreviewScene)
+{
+    if (!InPreviewScene)
+    {
+        return;
+    }
+
+    UStaticMesh* FloorMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/EditorMeshes/AssetViewer/Floor_Mesh.Floor_Mesh")); 
+    
+    if (!FloorMesh)
+    {
+        FloorMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Plane.Plane"));
+    }
+
+    if (!FloorMesh)
+    {
+        return;
+    }
+
+    FloorMeshComponent = NewObject<UStaticMeshComponent>(GetTransientPackage()); 
+    FloorMeshComponent->SetStaticMesh(FloorMesh); 
+    FloorMeshComponent->SetMobility(EComponentMobility::Static);
+    FloorMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    // Place the top of the floor slightly below the origin so the character stands on it.
+    const FTransform FloorTransform(FRotator::ZeroRotator, FVector(0., 0., 0.), FVector(16.f, 16.f, 1.f));
+    InPreviewScene->AddComponent(FloorMeshComponent, FloorTransform);
 }

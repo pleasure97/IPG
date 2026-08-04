@@ -10,6 +10,7 @@ class FActionCameraDirectorEditorToolkit;
 class FPreviewScene;
 class SActionCameraDirectorViewport;
 class UDebugSkelMeshComponent;
+class UStaticMeshComponent;
 class UGameplayCameraRigComponent;
 class AActionCameraPreviewCharacter;
 class APlayerController;
@@ -62,6 +63,8 @@ private:
 
 	void ApplyVariableOverridesForTime(float Time);
 
+	void SetupFloor(FPreviewScene* InPreviewScene);
+
 	UCameraRigAsset* LastAppliedRig = nullptr;
 
 	TWeakPtr<FActionCameraDirectorEditorToolkit> ToolkitPtr;
@@ -73,6 +76,7 @@ private:
 	/* Preview Component */
 	UDebugSkelMeshComponent* PreviewMeshComponent = nullptr;
 	UGameplayCameraRigComponent* PreviewCameraComponent = nullptr;
+	UStaticMeshComponent* FloorMeshComponent = nullptr;
 
 	AActionCameraPreviewCharacter* PreviewCharacter = nullptr;
 	APlayerController* DummyController = nullptr;

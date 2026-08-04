@@ -29,7 +29,6 @@ public class ActionCameraEditor : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "GameplayCameras",
-				"AnimGraph"
 				// ... add other public dependencies that you statically link with here ...
 			}
             );
@@ -41,14 +40,16 @@ public class ActionCameraEditor : ModuleRules
 				"Slate",
 				"SlateCore",
                 "InputCore",
-                "UnrealEd",
                 "AssetTools",
                 "ToolMenus",
 				"EditorStyle",
 				"EditorFramework",
 				"PropertyEditor",
 				"AnimationCore",
-				"AnimGraphRuntime"
+                "AnimGraphRuntime",
+                "AnimGraph",
+				"BlueprintGraph",
+				"UnrealEd"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
@@ -60,5 +61,5 @@ public class ActionCameraEditor : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
-	}
+    }
 }
