@@ -5,7 +5,7 @@
 #include "Misc/ScopeLock.h"
 #include "ProfilingDebugging/CpuProfilerTrace.h"
 
-UE_TRACE_CHANNEL_DEFINE(GuildTaskChannel)
+UE_TRACE_CHANNEL_DEFINE(IPGTask)
 
 UE::Tasks::FTask FIPGExclusiveResource::ExchangeTailTask(UE::Tasks::FTask NewTask)
 {
@@ -26,7 +26,7 @@ namespace IPGTaskSystem
 		EIPGThreadMode ThreadMode,
 		UE::Tasks::FTask Prerequisites)
 	{
-		TRACE_CPUPROFILER_EVENT_SCOPE_TEXT_ON_CHANNEL(DebugName, GuildTaskChannel);
+		TRACE_CPUPROFILER_EVENT_SCOPE_TEXT_ON_CHANNEL(DebugName, IPGTask);
 
 		// 1) Sort resource list to prevent deadlock
 		Resources.Sort([](const FIPGExclusiveResource& A, const FIPGExclusiveResource& B)
@@ -55,6 +55,8 @@ namespace IPGTaskSystem
 				}
 			}
 		}
+
+		const FString WorkScopeName = FString(DebugName) + TEXT(":Work");
 
 		// 4) Launch after resolving dependencies, then route thread
 		UE::Tasks::FTask LaunchHandle = UE::Tasks::Launch(UE_SOURCE_LOCATION, [Body = MoveTemp(Body), ThreadMode, CompletionEvent]() mutable
