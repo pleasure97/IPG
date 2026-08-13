@@ -26,9 +26,9 @@ void FIPGDistrictProcessor::Initialize()
     TArray<int32> InDegree;
     InDegree.SetNumZeroed(NumRows * NumCols);
 
-    for (int32 Row = 0; NumRows; ++Row)
+    for (int32 Row = 0; Row < NumRows; ++Row)
     {
-        for (int32 Col = 0; NumCols; ++Col)
+        for (int32 Col = 0; Col < NumCols; ++Col)
         {
             TArray<FIntPoint> Prerequisites = GetPrerequisites(Row, Col); 
             InDegree[Index(Row, Col)] = Prerequisites.Num();
