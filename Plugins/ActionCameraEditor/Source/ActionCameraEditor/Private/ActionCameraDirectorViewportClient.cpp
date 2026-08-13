@@ -92,6 +92,9 @@ FActionCameraDirectorViewportClient::FActionCameraDirectorViewportClient(
         }
     }
 
+    DefaultMeshRelativeTransform = PreviewCharacter->GetMesh()->GetRelativeTransform();
+    PreviewStartTransform = PreviewCharacter->GetActorTransform();
+
     PreviewCameraComponent = NewObject<UGameplayCameraRigComponent>(PreviewCharacter);
     PreviewCameraComponent->SetupAttachment(PreviewCharacter->GetCapsuleComponent());
     PreviewCameraComponent->RegisterComponentWithWorld(InPreviewScene->GetWorld());
@@ -343,7 +346,13 @@ void FActionCameraDirectorViewportClient::UpdatePreviewAnimation(float Time)
     if (PreviewMeshComponent->PreviewInstance == nullptr || PreviewMeshComponent->PreviewInstance->GetCurrentAsset() != ResolvedClip.AnimSequenceBase)
     {
         PreviewMeshComponent->EnablePreview(true, ResolvedClip.AnimSequenceBase);
-        PreviewMeshComponent->SetProcessRootMotionMode(EProcessRootMotionMode::LoopAndReset);
+        // Do not apply the component to root motion
+
+        PreviewMeshComponent->SetProcessRootMotionMode(EProcessRootMotionMode::Ignore);
+
+        PreviewMeshComponent->PreviewInstance->SetPlaying(false);
+
+        PreviewMeshComponent->SetRelativeTransform(DefaultMeshRelativeTransform);
     }
 
     if (UAnimPreviewInstance* AnimPreviewInstance = PreviewMeshComponent->PreviewInstance)
@@ -488,6 +497,6 @@ void FActionCameraDirectorViewportClient::SetupFloor(FPreviewScene* InPreviewSce
     FloorMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     // Place the top of the floor slightly below the origin so the character stands on it.
-    const FTransform FloorTransform(FRotator::ZeroRotator, FVector(0., 0., 0.), FVector(16.f, 16.f, 1.f));
+    const FTransform FloorTransform(FRotator::ZeroRotator, FVector(0., 0., -85.), FVector(16.f, 16.f, 1.f));
     InPreviewScene->AddComponent(FloorMeshComponent, FloorTransform);
 }

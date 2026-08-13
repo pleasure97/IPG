@@ -69,6 +69,10 @@ private:
 
 	TWeakPtr<FActionCameraDirectorEditorToolkit> ToolkitPtr;
 
+	/* Transform */
+	FTransform DefaultMeshRelativeTransform = FTransform::Identity;
+	FTransform PreviewStartTransform = FTransform::Identity;
+
 	/* Tick */
 	FActorComponentTickFunction PreviewMeshTickFunction;
 	FActorComponentTickFunction PreviewCameraTickFunction;
