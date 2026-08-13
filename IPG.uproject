@@ -69,6 +69,14 @@
 		{
 			"Name": "MassGameplay",
 			"Enabled": true
+		},
+		{
+			"Name": "Map_GFPTest",
+			"Enabled": true
+		},
+		{
+			"Name": "Mode_GFPTest",
+			"Enabled": true
 		}
 	]
 }
