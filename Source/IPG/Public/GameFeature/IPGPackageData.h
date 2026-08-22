@@ -32,7 +32,7 @@ public:
  * 
  */
 UCLASS(BlueprintType)
-class UIPGPackageData : public UPrimaryDataAsset
+class IPG_API UIPGPackageData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 	
@@ -57,9 +57,13 @@ public:
 	UFUNCTION()
 	TArray<FString> GetValidChunkNames() const;
 
-	UFUNCTION(CallInEditor, Category = "Build")
-	void ExportManifest() const;
+	UFUNCTION(CallInEditor, Category = "Build", meta = (DisplayName = "Export Build Recipe"))
+	void ExportBuildRecipe() const;
 
 protected:
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
+
+#if WITH_EDITOR
+	virtual void PreSave(FObjectPreSaveContext SaveContext) override;
+#endif
 };
