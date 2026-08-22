@@ -1,19 +1,45 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Exclusive/IPGExclusiveTask.h"
 #include "Misc/ScopeLock.h"
 #include "ProfilingDebugging/CpuProfilerTrace.h"
+#include "Algo/Unique.h"
 
-UE_TRACE_CHANNEL_DEFINE(IPGTask)
+UE_TRACE_CHANNEL_DEFINE(IPGTaskSystemChannel)
 
-UE::Tasks::FTask FIPGExclusiveResource::ExchangeTailTask(UE::Tasks::FTask NewTask)
+namespace IPGTaskSystem::Private
 {
-	FScopeLock Lock(&TailTaskCriticalSection);
+	// Critical section waits for the build of the preceding task to complete, 
+	// not for the actual execution of the preceding task to finish, 
+	// so it does not significantly impact overall performance
+	static FCriticalSection GBuildLock;
 
-	UE::Tasks::FTask PrevTask = TailTask;
+#if DO_CHECK
+	static thread_local bool bBuildInScope = false;
+#endif //DO_CHECK
+}
+
+FIPGExclusiveResource::~FIPGExclusiveResource()
+{
+	// If the object is destroyed while a task that has not yet executed is referencing this resource,
+	// The body of the task accesses a dangling resource.
+	checkf(!TailTask.IsValid() || TailTask.IsCompleted(),
+		TEXT("FIPGExclusiveResource destroyed while an exclusive task is still pending."));
+}
+
+UE::Tasks::FTask FIPGExclusiveResource::ExchangeTailTask(const UE::Tasks::FTask& NewTask)
+{
+	checkf(IPGTaskSystem::Private::bBuildInScope, TEXT("ExchangeTailTask must be called under the exclusive build lock."));
+
+	UE::Tasks::FTask PrevTask = MoveTemp(TailTask); 
 	TailTask = NewTask;
 
+	// Exclude already completed preceding task
+	if (PrevTask.IsValid() && PrevTask.IsCompleted())
+	{
+		return {};
+	}
+	
 	return PrevTask;
 }
 
@@ -24,74 +50,78 @@ namespace IPGTaskSystem
 		TArray<FIPGExclusiveResource*> Resources,
 		TFunction<void()> Body,
 		EIPGThreadMode ThreadMode,
-		UE::Tasks::FTask Prerequisites)
+		TConstArrayView<UE::Tasks::FTask> Prerequisites)
 	{
-		TRACE_CPUPROFILER_EVENT_SCOPE_TEXT_ON_CHANNEL(DebugName, IPGTask);
+		TRACE_CPUPROFILER_EVENT_SCOPE_TEXT_ON_CHANNEL(DebugName, IPGTaskSystemChannel);
 
-		// 1) Sort resource list to prevent deadlock
-		Resources.Sort([](const FIPGExclusiveResource& A, const FIPGExclusiveResource& B)
-		{
-				return &A < &B;
-		});
+		// 1) Remove null values from the resource array to prevent sorting errors
+		Resources.RemoveAll([](const FIPGExclusiveResource* Resource) { return Resource == nullptr; });
+
+		// 2) Sort resource list to prevent deadlock
+		Algo::Sort(Resources, [](const FIPGExclusiveResource* ResourceA, const FIPGExclusiveResource* ResourceB)
+			{
+				return reinterpret_cast<UPTRINT>(ResourceA) < reinterpret_cast<UPTRINT>(ResourceB);
+			});
+
+
+		Resources.SetNum(Algo::Unique(Resources), EAllowShrinking::No);
+
+		// 3) Create completion event 
+		UE::Tasks::FTaskEvent CompletionEvent(DebugName);
 
 		TArray<UE::Tasks::FTask> AllPrerequisites;
-		if (Prerequisites.IsValid())
+		AllPrerequisites.Reserve(Resources.Num() + Prerequisites.Num());
+
+		for (const UE::Tasks::FTask& Prerequisite : Prerequisites)
 		{
-			AllPrerequisites.Add(Prerequisites); 
+			if (Prerequisite.IsValid() && !Prerequisite.IsCompleted())
+			{
+				AllPrerequisites.Add(Prerequisite);
+			}
 		}
 
-		// 2) Create completion event 
-		UE::Tasks::FTaskEvent CompletionEvent(DebugName); 
-
-		// 3) Call exchange() made safe with FScopeLock
-		for (FIPGExclusiveResource* Resource : Resources)
+		// 4) Get prerequisite tasks needed to generate the task graph
+		// Set to release the lock when the scope ends
 		{
-			if (Resource)
+			FScopeLock BuildLock(&Private::GBuildLock); 
+
+#if DO_CHECK
+			Private::bBuildInScope = true;
+			ON_SCOPE_EXIT{ Private::bBuildInScope = false; };
+#endif
+			for (FIPGExclusiveResource* Resource : Resources)
 			{
 				UE::Tasks::FTask PrevTask = Resource->ExchangeTailTask(CompletionEvent); 
 				if (PrevTask.IsValid())
 				{
-					AllPrerequisites.Add(PrevTask);
+					AllPrerequisites.Add(MoveTemp(PrevTask));
 				}
 			}
 		}
 
-		const FString WorkScopeName = FString(DebugName) + TEXT(":Work");
+		const UE::Tasks::EExtendedTaskPriority ExtendedTaskPriority = (ThreadMode == EIPGThreadMode::GameThread)
+			? UE::Tasks::EExtendedTaskPriority::GameThreadNormalPri
+			: UE::Tasks::EExtendedTaskPriority::None;
 
-		// 4) Launch after resolving dependencies, then route thread
-		UE::Tasks::FTask LaunchHandle = UE::Tasks::Launch(UE_SOURCE_LOCATION, [Body = MoveTemp(Body), ThreadMode, CompletionEvent]() mutable
+		// 5) Launch after resolving dependencies, then route thread
+		// Scheduled only when all tasks in the array are completed, and execution is guaranteed upon completion
+		UE::Tasks::Launch(
+			DebugName, 
+			[DebugName, Body = MoveTemp(Body), ThreadMode, CompletionEvent]() mutable
 			{
+				ON_SCOPE_EXIT{ CompletionEvent.Trigger(); };
+
+				TRACE_CPUPROFILER_EVENT_SCOPE_TEXT_ON_CHANNEL(DebugName, IPGTaskSystemChannel);
+
 				// Game Thread
-				if (ThreadMode == EIPGThreadMode::GameThread)
+				if (Body)
 				{
-					AsyncTask(ENamedThreads::GameThread, [Body = MoveTemp(Body), CompletionEvent]() mutable
-						{
-							if (Body)
-							{
-								Body();
-							}
-
-							CompletionEvent.Trigger();
-						});
+					Body();
 				}
-				// Worker Thread
-				else
-				{
-					if (Body)
-					{
-						Body();
-					}
-					CompletionEvent.Trigger();
-				}
-			}, AllPrerequisites);
-
-		// 5) Prevent deadlock caused by launch failure
-		if (!LaunchHandle.IsValid())
-		{
-			// If a task launch fails due to a system error, 
-			// Immediately release the event tied to the resource to prevent subsequent tasks from being blocked
-			CompletionEvent.Trigger();
-		}
+			}, 
+			MoveTemp(AllPrerequisites),
+			UE::Tasks::ETaskPriority::Default,
+			ExtendedTaskPriority);
 
 		return CompletionEvent;
 	}
