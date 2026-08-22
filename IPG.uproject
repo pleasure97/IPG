@@ -24,6 +24,11 @@
 				"GameplayCameras",
 				"StateTreeModule"
 			]
+		},
+		{
+			"Name": "IPGEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
 		}
 	],
 	"Plugins": [
