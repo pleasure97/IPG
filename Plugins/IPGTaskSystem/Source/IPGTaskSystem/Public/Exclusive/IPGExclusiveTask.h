@@ -4,13 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Tasks/Task.h"          
-#include "HAL/PlatformAtomics.h"
-#include "Misc/SpinLock.h"
 #include "Trace/Trace.h"
 
 class FIPGExclusiveTask;
 
-UE_TRACE_CHANNEL_EXTERN(GuildTaskChannel, IPGTASKSYSTEM_API)
+UE_TRACE_CHANNEL_EXTERN(IPGTaskSystemChannel, IPGTASKSYSTEM_API)
 
 enum class EIPGThreadMode : uint8
 {
@@ -26,9 +24,9 @@ class IPGTASKSYSTEM_API FIPGExclusiveResource
 {
 public:
 	FIPGExclusiveResource() = default;
-	~FIPGExclusiveResource() = default;
+	~FIPGExclusiveResource();
 
-	// Copy/Move prohibited because this is used as a pointer identifier
+	// Copy/Move prohibited
 	FIPGExclusiveResource(const FIPGExclusiveResource&) = delete;
 	FIPGExclusiveResource& operator=(const FIPGExclusiveResource&) = delete;
 
@@ -37,11 +35,10 @@ public:
 	 * - Replace this resource's tail task with NewTask atomically, 
 	 * - return preceding tail task
 	 */
-	UE::Tasks::FTask ExchangeTailTask(UE::Tasks::FTask NewTask);
+	UE::Tasks::FTask ExchangeTailTask(const UE::Tasks::FTask& NewTask);
 
 private:
 	UE::Tasks::FTask TailTask;
-	FCriticalSection TailTaskCriticalSection;
 };
 
 /**
@@ -77,6 +74,6 @@ namespace IPGTaskSystem
 		TArray<FIPGExclusiveResource*> Resources,
 		TFunction<void()> Body,
 		EIPGThreadMode ThreadMode = EIPGThreadMode::WorkerThread,
-		UE::Tasks::FTask Prerequisites = {}
+		TConstArrayView<UE::Tasks::FTask> Prerequisites = {} /* { TaskA, TaskB} */
 	);
 }
