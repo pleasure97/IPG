@@ -6,7 +6,7 @@ public class IPG : ModuleRules
 {
 	public IPG(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core",
@@ -27,12 +27,16 @@ public class IPG : ModuleRules
 			"AnimGraphRuntime",
             "ModularGameplay",
 			"IPGTaskSystem", 
-			"IPGInventory"
+			"IPGInventory",
+			"IPGAnimNode",
+			"Projects",
+			"Json",
+			"JsonUtilities"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {
-            "AutomationController", 
-			"Slate", 
+            "AutomationController",
+            "Slate", 
 			"SlateCore",
 			"DeveloperSettings", 
 			"NavigationSystem", 
@@ -41,7 +45,8 @@ public class IPG : ModuleRules
 			"MassActors",  
 			"MassSpawner",
 			"MassLOD",
-			"MassRepresentation"
+			"MassRepresentation",
+			"MassReplication"
         });
 
 		PublicIncludePaths.AddRange(new string[] {
@@ -61,13 +66,13 @@ public class IPG : ModuleRules
             "IPG/Public/Variant_SideScrolling/UI"
         });
 
-		SetupIrisSupport(Target);
-		// Uncomment if you are using Slate UI
-		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+        SetupIrisSupport(Target);
+        // Uncomment if you are using Slate UI
+        // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 
-		// Uncomment if you are using online features
-		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
+        // Uncomment if you are using online features
+        // PrivateDependencyModuleNames.Add("OnlineSubsystem");
 
-		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
-	}
+        // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
+    }
 }

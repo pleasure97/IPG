@@ -34,6 +34,10 @@ public:
 protected:
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
 
+#if WITH_EDITOR
+	virtual void PreSave(FObjectPreSaveContext SaveContext) override;
+#endif
+
 private:
 	static TArray<FString> GetAllInstalledGameFeaturePluginNames();
 };
