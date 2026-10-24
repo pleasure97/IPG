@@ -526,3 +526,44 @@ TArray<FVector> UWeaponHitDetectionComponent::GetPositionFromRawAnimData(FName S
 
 	return ExtractedPositions;
 }
+
+FCollisionQueryParams UWeaponHitDetectionComponent::MakeCollisionQueryParams() const
+{
+	FCollisionQueryParams CollisionQueryParams(SCENE_QUERY_STAT(WeaponHit), false); 
+
+	AActor* WeaponActor = GetOwner(); 
+	if (!IsValid(WeaponActor))
+	{
+		return CollisionQueryParams;
+	}
+
+	CollisionQueryParams.AddIgnoredActor(WeaponActor);
+
+	AActor* CharacterActor = WeaponActor->GetOwner(); 
+	if (!IsValid(CharacterActor))
+	{
+		return CollisionQueryParams;
+	}
+
+	CollisionQueryParams.AddIgnoredActor(CharacterActor);
+
+	return CollisionQueryParams;
+}
+
+void UWeaponHitDetectionComponent::DetermineHit(AActor* HitActor, UPrimitiveComponent* PrimitiveComponent, const FVector& ImpactPoint)
+{
+	// Check if HitActor and PrimitveComponent are valid and HitActor is already in hit actors set
+	if (!IsValid(HitActor) || !IsValid(PrimitiveComponent) || AlreadyHitActors.Contains(HitActor))
+	{
+		return;
+	}
+
+	AlreadyHitActors.Add(HitActor); 
+
+	const FVector ImpactNormal = (ImpactPoint - PrimitiveComponent->GetComponentLocation()).GetSafeNormal(); 
+
+	// Make Hit Result
+	FHitResult HitResult(HitActor, PrimitiveComponent, ImpactPoint, ImpactNormal); 
+
+	OnWeaponHit.Broadcast(HitResult);
+}
