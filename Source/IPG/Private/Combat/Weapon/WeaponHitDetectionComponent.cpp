@@ -270,7 +270,42 @@ void UWeaponHitDetectionComponent::PerformTriangleDetection()
 
 		for (AActor* TargetActor : OutActors)
 		{
-			// TODO - Check whether the enemy has collided with the two created triangular planes
+			// Skip the character using this weapon, as well as any targets already hit
+			if (TargetActor == GetOwner()->GetOwner() || AlreadyHitActors.Contains(TargetActor))
+			{
+				continue;
+			}
+
+			// Get skeletal mesh component from target actor
+			USkeletalMeshComponent* TargetMesh = TargetActor->FindComponentByClass<USkeletalMeshComponent>();
+			if (!TargetMesh)
+			{
+				continue;
+			}
+
+			// Configure settings for line traces and collision
+			const int32 NumLineTraces = 5;
+			FCollisionQueryParams TraceParams(SCENE_QUERY_STAT(WeaponTriangle), false);
+
+			for (int32 k = 0; k <= NumLineTraces; ++k)
+			{
+				// Position ratio along the weapon (0 = Root, 1 = Tip)
+				float t = static_cast<float>(k) / NumLineTraces;
+
+				// A point on the weapon in the previous frame
+				FVector Start = FMath::Lerp(LastSubRoot, LastSubTip, t);
+				// A point on the weapon in the current frame
+				FVector End = FMath::Lerp(InterpRoot, InterpTip, t);
+
+				// Check whether this line intersects with the target mesh
+				FHitResult HitResult;
+				if (TargetMesh->LineTraceComponent(HitResult, Start, End, TraceParams))
+				{
+					// Handle Hits
+					AlreadyHitActors.Add(TargetActor);
+					break;
+				}
+			}
 		}
 
 		// Update current position to Last for the next substep
