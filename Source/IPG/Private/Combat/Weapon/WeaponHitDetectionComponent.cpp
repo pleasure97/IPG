@@ -270,7 +270,42 @@ void UWeaponHitDetectionComponent::PerformTriangleDetection()
 
 		for (AActor* TargetActor : OutActors)
 		{
-			// TODO - Check whether the enemy has collided with the two created triangular planes
+			// Skip the character using this weapon, as well as any targets already hit
+			if (TargetActor == GetOwner()->GetOwner() || AlreadyHitActors.Contains(TargetActor))
+			{
+				continue;
+			}
+
+			// Get skeletal mesh component from target actor
+			USkeletalMeshComponent* TargetMesh = TargetActor->FindComponentByClass<USkeletalMeshComponent>();
+			if (!TargetMesh)
+			{
+				continue;
+			}
+
+			// Configure settings for line traces and collision
+			const int32 NumLineTraces = 5;
+			FCollisionQueryParams TraceParams(SCENE_QUERY_STAT(WeaponTriangle), false);
+
+			for (int32 k = 0; k <= NumLineTraces; ++k)
+			{
+				// Position ratio along the weapon (0 = Root, 1 = Tip)
+				float t = static_cast<float>(k) / NumLineTraces;
+
+				// A point on the weapon in the previous frame
+				FVector Start = FMath::Lerp(LastSubRoot, LastSubTip, t);
+				// A point on the weapon in the current frame
+				FVector End = FMath::Lerp(InterpRoot, InterpTip, t);
+
+				// Check whether this line intersects with the target mesh
+				FHitResult HitResult;
+				if (TargetMesh->LineTraceComponent(HitResult, Start, End, TraceParams))
+				{
+					// Handle Hits
+					AlreadyHitActors.Add(TargetActor);
+					break;
+				}
+			}
 		}
 
 		// Update current position to Last for the next substep
@@ -525,4 +560,45 @@ TArray<FVector> UWeaponHitDetectionComponent::GetPositionFromRawAnimData(FName S
 	}
 
 	return ExtractedPositions;
+}
+
+FCollisionQueryParams UWeaponHitDetectionComponent::MakeCollisionQueryParams() const
+{
+	FCollisionQueryParams CollisionQueryParams(SCENE_QUERY_STAT(WeaponHit), false); 
+
+	AActor* WeaponActor = GetOwner(); 
+	if (!IsValid(WeaponActor))
+	{
+		return CollisionQueryParams;
+	}
+
+	CollisionQueryParams.AddIgnoredActor(WeaponActor);
+
+	AActor* CharacterActor = WeaponActor->GetOwner(); 
+	if (!IsValid(CharacterActor))
+	{
+		return CollisionQueryParams;
+	}
+
+	CollisionQueryParams.AddIgnoredActor(CharacterActor);
+
+	return CollisionQueryParams;
+}
+
+void UWeaponHitDetectionComponent::DetermineHit(AActor* HitActor, UPrimitiveComponent* PrimitiveComponent, const FVector& ImpactPoint)
+{
+	// Check if HitActor and PrimitveComponent are valid and HitActor is already in hit actors set
+	if (!IsValid(HitActor) || !IsValid(PrimitiveComponent) || AlreadyHitActors.Contains(HitActor))
+	{
+		return;
+	}
+
+	AlreadyHitActors.Add(HitActor); 
+
+	const FVector ImpactNormal = (ImpactPoint - PrimitiveComponent->GetComponentLocation()).GetSafeNormal(); 
+
+	// Make Hit Result
+	FHitResult HitResult(HitActor, PrimitiveComponent, ImpactPoint, ImpactNormal); 
+
+	OnWeaponHit.Broadcast(HitResult);
 }

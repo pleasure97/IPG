@@ -14,6 +14,8 @@ DECLARE_CYCLE_STAT(TEXT("SweepDetection"), STAT_SweepDetection, STATGROUP_Weapon
 DECLARE_CYCLE_STAT(TEXT("RawAnimDataDetection"), STAT_RawAnimDataDetection, STATGROUP_WeaponHitDetection);
 DECLARE_CYCLE_STAT(TEXT("GetPositionFromRawAnimData"), STAT_GetPositionFromRawAnimData, STATGROUP_WeaponHitDetection);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponHit, const HitResult&, HitResult);
+
 class AIPGWeapon;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -23,6 +25,9 @@ class IPG_API UWeaponHitDetectionComponent : public UActorComponent
 
 public:	
 	UWeaponHitDetectionComponent();
+
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponHit OnWeaponHit;
 
 	// Would be called by anim notify state
 	UFUNCTION(BlueprintCallable)
@@ -39,6 +44,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
 	TObjectPtr<UWeaponHitDetectionDataAsset> HitDetectionData;
 
+	// Set the default to 'Pawn', and add if necessary
+	UPROPERTY(EditAnywhere, Category = "Config")
+	TArray<TEnumAsByte<EObjectTypeQuery>> HitObjectTypes;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
 	FName WeaponParentBoneName = TEXT("hand_r");
 
@@ -50,6 +59,9 @@ private:
 	void PreloadAllHitDetectionData();
 
 	TArray<FVector> GetPositionFromRawAnimData(FName SocketName, float DeltaTime);
+	FCollisionQueryParams MakeCollisionQueryParams() const;
+
+	void DetermineHit(AActor* HitActor, UPrimitiveComponent* PrimitiveComponent, const FVector& ImpactPoint);
 
 	UPROPERTY()
 	TMap<EHitDetectionMethod, UWeaponHitDetectionDataAsset*> PreloadedDataAssets;
@@ -67,4 +79,6 @@ private:
 	TWeakObjectPtr<UShapeComponent> OwnerWeaponCollision;
 	TWeakObjectPtr<USkeletalMeshComponent> OwnerCharacterSkeletalMesh;
 	TWeakObjectPtr<UAnimInstance> OwnerCharacterAnimInstance;
+
+	TSet<TWeakObjectPtr<AActor>> AlreadyHitActors;
 };
